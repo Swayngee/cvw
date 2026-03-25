@@ -51,34 +51,6 @@ module testbench;
   logic                           MemEn;
   logic [`XLEN/8-1:0]             WriteByteEn;   // byte enables, one per 8 bits
 
-/* ------- DEBUG PRINTS ------- */
-
-  always @(negedge clk) begin
-    int i;
-    #1;
-
-    if (~reset) begin
-
-      //$display("PC: %h \t Instr: %h", PC, Instr);
-
-      // $display("MemEn: %b",
-      //         MemEn
-      //         );
-
-      // $display("DataAdr: %h, t0: %h",
-      //         DataAdr,
-      //         dut.ieu.dp.rf.rf[5]
-      //         );
-
-      // terminate program as it exited program space
-      if (Instr === 'x) begin
-        $display("Instruction data x (PC: %h)", PC);
-        $finish(-1);
-    end
-
-    end
-
-  end
 
   /* ------- PROCESSOR Instantiation ------- */
 

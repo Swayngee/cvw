@@ -31,18 +31,25 @@ module ram1p1rwb #(
 
     assign ReadData = En ? Memory[(MemoryAddress-MEMORY_ADR_OFFSET)>>2] : 'x;
 
-    always_ff @(negedge clk) begin
-        //$display("%s En: %h WriteEn: %h Addr: %h ReadData: %h", MEMORY_NAME, En, WriteEn, MemoryAddress, ReadData);
-        if (reset) begin
-            int i;
-            logic[DATA_BITS-1:0] memory_entry;
-            for (i = 0; i < MEMORY_SIZE_ENTRIES; i++) begin
-                memory_entry = InitMem [EXTRA_ENTRIES + i];
-                if (memory_entry === 'x)    Memory[i] <= '0;
-                else                        Memory[i] <= memory_entry;
-                // Memory[i] <= memory_entry;
-            end
-        end else if (En && ((unsigned'(MemoryAddress) < unsigned'(MEMORY_ADR_OFFSET)) ||
+always_ff @(negedge clk) begin
+    if (reset) begin
+        int i;
+        logic[DATA_BITS-1:0] memory_entry;
+        for (i = 0; i < MEMORY_SIZE_ENTRIES; i++) begin
+            memory_entry = InitMem [EXTRA_ENTRIES + i];
+            if (memory_entry === 'x)    Memory[i] <= '0;
+            else                        Memory[i] <= memory_entry;
+        end
+
+    end else begin
+
+        // STACK MONITOR
+        //if (En && MEMORY_NAME == "Data Memory" &&
+            //(MemoryAddress == 32'h8002f634 || MemoryAddress == 32'h8002f630))
+            //$display("[STACK] Addr=%0h WrEn=%0b WrData=%0h ByteEn=%04b RdData=%0h",
+                //MemoryAddress, WriteEn, WriteData, WriteByteEn, ReadData);
+
+        if (En && ((unsigned'(MemoryAddress) < unsigned'(MEMORY_ADR_OFFSET)) ||
                     (unsigned'(MemoryAddress) > unsigned'(MEMORY_ADR_OFFSET + (MEMORY_SIZE_ENTRIES-1) * (DATA_BITS/8))))) begin
             $display("ERROR: %s memory out-of-range addr %h", MEMORY_NAME, MemoryAddress);
             $display("DEBUG: MEM_ADR_OFFSET(%h) MEMORY_SIZE_ENTRIES(%h) DATA_BITS(%h) TOP(%h)", MEMORY_ADR_OFFSET, MEMORY_SIZE_ENTRIES, DATA_BITS, (MEMORY_ADR_OFFSET + (MEMORY_SIZE_ENTRIES-1) * DATA_BITS/8));
@@ -55,20 +62,17 @@ module ram1p1rwb #(
 
         end else if (WriteEn && En) begin
             logic[DATA_BITS-1:0] LocalReadData;
-
             LocalReadData = Memory[(MemoryAddress-MEMORY_ADR_OFFSET)>>2];
-
-            //$display("%s Writing to local adr: %h, Write Data: %h, byte en: %b", MEMORY_NAME, (MemoryAddress-MEMORY_ADR_OFFSET)>>2, WriteData, WriteByteEn);
-
             for (int i = 0; i < (DATA_BITS/8); i++) begin
                 if (WriteByteEn[i]) begin
                     LocalReadData[((i+1)*8-1) -: 8] = WriteData[((i+1)*8-1) -: 8];
                 end
             end
-
             Memory[(MemoryAddress-MEMORY_ADR_OFFSET)>>2] <= LocalReadData;
         end
+
     end
+end
 
     initial begin
         string memfile;

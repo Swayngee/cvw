@@ -34,10 +34,12 @@
 
 // WIDTH is number of bits in one "word" of the memory, DEPTH is number of such words
 
-module ram1p1rwbe import cvw::*; #(parameter USE_SRAM=0, DEPTH=64, WIDTH=44, PRELOAD_ENABLED=0) (
+module ram1p1rwbe import cvw::*; #(parameter USE_SRAM=0, DEPTH=64, WIDTH=44, PRELOAD_ENABLED=0,
+  localparam int unsigned ADDR_W = (DEPTH <= 1) ? 1 : $clog2(DEPTH)
+) (
   input logic                     clk,
   input logic                     ce,
-  input logic [$clog2(DEPTH)-1:0] addr,
+  input logic [ADDR_W-1:0]        addr,
   input logic [WIDTH-1:0]         din,
   input logic                     we,
   input logic [(WIDTH-1)/8:0]     bwe,
@@ -82,6 +84,7 @@ module ram1p1rwbe import cvw::*; #(parameter USE_SRAM=0, DEPTH=64, WIDTH=44, PRE
     ///////////////////////////////////////////////////////////////////////////////
   end else begin: ram
     bit [WIDTH-1:0] RAM[DEPTH-1:0];
+    wire [ADDR_W-1:0] addr_idx = (DEPTH <= 1) ? '0 : addr;
 
     // if (PRELOAD_ENABLED) begin
     //   initial begin
@@ -109,9 +112,10 @@ module ram1p1rwbe import cvw::*; #(parameter USE_SRAM=0, DEPTH=64, WIDTH=44, PRE
       end
 
     // Combinational read: register address and read after clock edge
-    logic [$clog2(DEPTH)-1:0] addrd;
-    flopen #($clog2(DEPTH)) adrreg(clk, ce, addr, addrd);
-    assign dout = RAM[addrd];
+    logic [ADDR_W-1:0] addrd;
+    wire [ADDR_W-1:0] addrd_idx = (DEPTH <= 1) ? '0 : addrd;
+    flopen #(ADDR_W) adrreg(clk, ce, addr, addrd);
+    assign dout = RAM[addrd_idx];
 
     /*      // Alternate read logic reads the old contents of mem[addr].  Increases setup time and adds dout reg, but reduces clk to q
      always_ff @(posedge clk)
@@ -125,13 +129,13 @@ module ram1p1rwbe import cvw::*; #(parameter USE_SRAM=0, DEPTH=64, WIDTH=44, PRE
       always @(posedge clk)
         if (ce & we)
           for(i = 0; i < WIDTH/8; i++)
-            if(bwe[i]) RAM[addr][i*8 +: 8] <= din[i*8 +: 8];
+            if(bwe[i]) RAM[addr_idx][i*8 +: 8] <= din[i*8 +: 8];
     end
 
     if (WIDTH%8 != 0) // handle msbs if width not a multiple of 8
       always @(posedge clk)
         if (ce & we & bwe[WIDTH/8])
-          RAM[addr][WIDTH-1:WIDTH-WIDTH%8] <= din[WIDTH-1:WIDTH-WIDTH%8];
+          RAM[addr_idx][WIDTH-1:WIDTH-WIDTH%8] <= din[WIDTH-1:WIDTH-WIDTH%8];
   end
 
 endmodule

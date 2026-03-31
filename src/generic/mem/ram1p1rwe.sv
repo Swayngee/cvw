@@ -32,10 +32,12 @@
 
 // WIDTH is number of bits in one "word" of the memory, DEPTH is number of such words
 
-module ram1p1rwe import cvw::* ; #(parameter USE_SRAM=0, DEPTH=64, WIDTH=44) (
+module ram1p1rwe import cvw::* ; #(parameter USE_SRAM=0, DEPTH=64, WIDTH=44,
+  localparam int unsigned ADDR_W = (DEPTH <= 1) ? 1 : $clog2(DEPTH)
+) (
   input logic                     clk,
   input logic                     ce,
-  input logic [$clog2(DEPTH)-1:0] addr,
+  input logic [ADDR_W-1:0]        addr,
   input logic [WIDTH-1:0]         din,
   input logic                     we,
   output logic [WIDTH-1:0]        dout
@@ -70,11 +72,13 @@ module ram1p1rwe import cvw::* ; #(parameter USE_SRAM=0, DEPTH=64, WIDTH=44) (
     // The version with byte write enables it correctly infers block ram.
 
     bit [WIDTH-1:0]               RAM[DEPTH-1:0];
+    wire [ADDR_W-1:0]             addr_idx = (DEPTH <= 1) ? '0 : addr;
 
     // Combinational read: register address and read after clock edge
-    logic [$clog2(DEPTH)-1:0] addrd;
-    flopen #($clog2(DEPTH)) adrreg(clk, ce, addr, addrd);
-    assign dout = RAM[addrd];
+    logic [ADDR_W-1:0] addrd;
+    wire [ADDR_W-1:0] addrd_idx = (DEPTH <= 1) ? '0 : addrd;
+    flopen #(ADDR_W) adrreg(clk, ce, addr, addrd);
+    assign dout = RAM[addrd_idx];
 
     /*      // Alternate read logic reads the old contents of mem[addr].  Increases setup time and adds dout reg, but reduces clk to q
      always_ff @(posedge clk)
@@ -90,6 +94,6 @@ module ram1p1rwe import cvw::* ; #(parameter USE_SRAM=0, DEPTH=64, WIDTH=44) (
       // so we can never get we=1, ce=0 for I$.
       if (ce & we)
         // coverage on
-        RAM[addr] <= din;
+        RAM[addr_idx] <= din;
   end
 endmodule

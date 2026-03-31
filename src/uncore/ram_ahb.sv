@@ -41,7 +41,9 @@ module ram_ahb import cvw::*;  #(parameter cvw_t P,
   output logic                 HRESPRam, HREADYRam
 );
 
-  localparam                   ADDR_WIDTH = $clog2(RANGE/8);
+  // $clog2(1)==0 would invert this part-select (msb < lsb) and break simulation
+  localparam int unsigned      RAM_WORDS = RANGE / 8;
+  localparam                   ADDR_WIDTH = (RAM_WORDS <= 1) ? 1 : $clog2(RAM_WORDS);
   localparam                   OFFSET = $clog2(P.XLEN/8);
 
   logic [P.XLEN/8-1:0]         ByteMask;

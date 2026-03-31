@@ -45,7 +45,7 @@ module dtim import cvw::*;  #(parameter cvw_t P) (
   // verilator  lint_off WIDTH
   localparam DEPTH      = P.DTIM_RANGE/LLENBYTES;
   // verilator  lint_on WIDTH
-  localparam ADDR_WDITH = $clog2(DEPTH);
+  localparam ADDR_WDITH = (DEPTH <= 1) ? 1 : $clog2(DEPTH);
   localparam OFFSET     = $clog2(LLENBYTES);
 
   assign we = MemRWM[0]  & ~FlushW;  // have to ignore write if Trap.

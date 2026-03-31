@@ -29,7 +29,11 @@ always_ff @(posedge clk) begin
     //$display("PC=%h Instr=%h Op=%b", PC, Instr, Instr[6:0]);
 //end
 
-assign RD1 = (A1 != 0) ? rf[A1] : 32'd0;
-assign RD2 = (A2 != 0) ? rf[A2] : 32'd0;
+// Write-first bypass: if decode reads the same register that WB writes this cycle,
+// return WD3 directly to avoid a one-cycle stale read hazard.
+assign RD1 = (A1 == 5'd0) ? 32'd0 :
+             ((WE3 && (A1 == A3) && (A3 != 5'd0)) ? WD3 : rf[A1]);
+assign RD2 = (A2 == 5'd0) ? 32'd0 :
+             ((WE3 && (A2 == A3) && (A3 != 5'd0)) ? WD3 : rf[A2]);
 
 endmodule

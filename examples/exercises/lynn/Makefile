@@ -37,6 +37,8 @@ SAIL  				?= 0
 VSIM_EXTRA_FLAGS 	?= # Extra flags if you want them
 
 # Optional extra plusargs you can add without touching the recipe
+# Examples: +MAX_CYCLES=50000 (fail fast on hang), +MAX_CYCLES=0 (no timeout),
+#           +TRACE_PC +TRACE_INTERVAL=500 (periodic PC/Instr while debugging)
 VSIM_PLUSARGS_EXTRA ?=
 
 # ---- Command line optional parameters ---- #

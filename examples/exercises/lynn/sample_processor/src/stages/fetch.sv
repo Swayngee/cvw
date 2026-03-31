@@ -11,12 +11,13 @@ module fetch(input logic  clk, reset,
     logic [31:0] PCNext;
     logic [31:0] PCPlus4;
     // next PC logic
+    // Default matches linker FLASH/RAM base (see tb/testbench `ELF_BASE_ADR`); avoids PC=0
+    // fetches that are below IMEM offset and would trigger ram1p1rwb out-of-range.
     logic [31:0] entry_addr;
     initial begin
-        // default
-        entry_addr = '0;
+        entry_addr = 32'h8000_0000;
 
-        // override if provided
+        // override if provided (+ENTRY_ADDR=...)
         void'($value$plusargs("ENTRY_ADDR=%h", entry_addr));
 
         $display("[TB] ENTRY_ADDR = 0x%h", entry_addr);

@@ -29,7 +29,17 @@ module ram1p1rwb #(
 
     logic[DATA_BITS-1:0] Memory[MEMORY_SIZE_ENTRIES-1:0];
 
-    assign ReadData = En ? Memory[(MemoryAddress-MEMORY_ADR_OFFSET)>>2] : 'x;
+    // Word index uses byte offset / bytes-per-word. Guard the read: if MemoryAddress is
+    // below MEMORY_ADR_OFFSET, unsigned subtraction wraps and would index Memory OOB before
+    // the negedge bounds check runs.
+    localparam int unsigned BYTES_PER_WORD = DATA_BITS / 8;
+    localparam int unsigned ADDRLSB = $clog2(BYTES_PER_WORD);
+    logic AddrInRange;
+    assign AddrInRange = (unsigned'(MemoryAddress) >= unsigned'(MEMORY_ADR_OFFSET)) &&
+        (unsigned'(MemoryAddress) <= unsigned'(MEMORY_ADR_OFFSET + (MEMORY_SIZE_ENTRIES - 1) * BYTES_PER_WORD));
+    assign ReadData = (En && AddrInRange)
+        ? Memory[(unsigned'(MemoryAddress) - unsigned'(MEMORY_ADR_OFFSET)) >> ADDRLSB]
+        : 'x;
 
 always_ff @(negedge clk) begin
     if (reset) begin
@@ -50,9 +60,9 @@ always_ff @(negedge clk) begin
                 //MemoryAddress, WriteEn, WriteData, WriteByteEn, ReadData);
 
         if (En && ((unsigned'(MemoryAddress) < unsigned'(MEMORY_ADR_OFFSET)) ||
-                    (unsigned'(MemoryAddress) > unsigned'(MEMORY_ADR_OFFSET + (MEMORY_SIZE_ENTRIES-1) * (DATA_BITS/8))))) begin
+                    (unsigned'(MemoryAddress) > unsigned'(MEMORY_ADR_OFFSET + (MEMORY_SIZE_ENTRIES - 1) * BYTES_PER_WORD)))) begin
             $display("ERROR: %s memory out-of-range addr %h", MEMORY_NAME, MemoryAddress);
-            $display("DEBUG: MEM_ADR_OFFSET(%h) MEMORY_SIZE_ENTRIES(%h) DATA_BITS(%h) TOP(%h)", MEMORY_ADR_OFFSET, MEMORY_SIZE_ENTRIES, DATA_BITS, (MEMORY_ADR_OFFSET + (MEMORY_SIZE_ENTRIES-1) * DATA_BITS/8));
+            $display("DEBUG: MEM_ADR_OFFSET(%h) MEMORY_SIZE_ENTRIES(%h) DATA_BITS(%h) TOP(%h)", MEMORY_ADR_OFFSET, MEMORY_SIZE_ENTRIES, DATA_BITS, (MEMORY_ADR_OFFSET + (MEMORY_SIZE_ENTRIES - 1) * BYTES_PER_WORD));
             $finish(-1);
 
         end else if (En & ~WriteEn & ReadData === 'x) begin
@@ -62,13 +72,13 @@ always_ff @(negedge clk) begin
 
         end else if (WriteEn && En) begin
             logic[DATA_BITS-1:0] LocalReadData;
-            LocalReadData = Memory[(MemoryAddress-MEMORY_ADR_OFFSET)>>2];
-            for (int i = 0; i < (DATA_BITS/8); i++) begin
+            LocalReadData = Memory[(unsigned'(MemoryAddress) - unsigned'(MEMORY_ADR_OFFSET)) >> ADDRLSB];
+            for (int i = 0; i < BYTES_PER_WORD; i++) begin
                 if (WriteByteEn[i]) begin
                     LocalReadData[((i+1)*8-1) -: 8] = WriteData[((i+1)*8-1) -: 8];
                 end
             end
-            Memory[(MemoryAddress-MEMORY_ADR_OFFSET)>>2] <= LocalReadData;
+            Memory[(unsigned'(MemoryAddress) - unsigned'(MEMORY_ADR_OFFSET)) >> ADDRLSB] <= LocalReadData;
         end
 
     end

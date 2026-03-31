@@ -151,11 +151,26 @@ always @(negedge clk) begin
   end
 end
 
+// Max simulated cycles after reset before declaring a hang (override with +MAX_CYCLES=<n>)
+longint unsigned max_cycles;
+integer trace_interval;
+
 initial begin
 
     TO_HOST_ADR = '0; // default
     void'($value$plusargs("TOHOST_ADDR=%h", TO_HOST_ADR)); // override if provided
     $display("[TB] TOHOST_ADDR = 0x%h", TO_HOST_ADR);
+
+    max_cycles = 64'd10_000_000;
+    void'($value$plusargs("MAX_CYCLES=%d", max_cycles));
+    $display("[TB] MAX_CYCLES (hang timeout, 0=off) = %0d", max_cycles);
+
+    trace_interval = 0;
+    if ($test$plusargs("TRACE_PC")) begin
+      trace_interval = 10000;
+      void'($value$plusargs("TRACE_INTERVAL=%d", trace_interval));
+      $display("[TB] TRACE_PC enabled every %0d cycles (+TRACE_INTERVAL to change)", trace_interval);
+    end
 
     // Wait until reset deasserts
     @(negedge reset);
@@ -197,6 +212,23 @@ always_ff @(negedge clk) begin
     if (DataAdr == `MTIME_POINTER)      TestbenchRequestReadData = cycle_count[31:0];
     if (DataAdr == `MTIME_POINTER + 4)  TestbenchRequestReadData = cycle_count[63:32];
   end
+end
+
+// Hang watchdog: fires even when the core is stuck in a non-jal loop or deadlock
+// Set +MAX_CYCLES=0 to disable. Default 10M cycles ~= 0.1 s at 100 MHz.
+always_ff @(posedge clk) begin
+  if (!reset && (max_cycles != 0) && (cycle_count == max_cycles)) begin
+    $error("Simulation hang / timeout after %0d clock cycles (raise +MAX_CYCLES or fix DUT/program).", max_cycles);
+    $display("       PC=%h  Instr=%h  DataAdr=%h  MemEn=%b WriteEn=%b", PC, Instr, DataAdr, MemEn, WriteEn);
+    $display("       Hint: check tohost/crt0 exit, or run with +TRACE_PC +TRACE_INTERVAL=500");
+    $finish(2);
+  end
+end
+
+// Optional PC trace (+TRACE_PC, optional +TRACE_INTERVAL=<n>)
+always_ff @(posedge clk) begin
+  if (!reset && (trace_interval > 0) && (cycle_count != 0) && ((cycle_count % trace_interval) == 0))
+    $display("[%0t] TRACE PC=%h Instr=%h MemEn=%b Adr=%h", $time, PC, Instr, MemEn, DataAdr);
 end
 
 

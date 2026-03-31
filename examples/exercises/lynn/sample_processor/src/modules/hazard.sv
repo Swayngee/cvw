@@ -6,7 +6,7 @@ module hazard (input  logic [4:0] Rs1E, Rs2E,
               input  logic       RegWriteW,
               input  logic [4:0] Rs1D, Rs2D,
               input  logic [4:0] RdE,
-              input  logic       ResultSrcE0,
+              input  logic [1:0] ResultSrcE,
               input  logic       PCSrcE,
               output logic [1:0] ForwardAE,
               output logic [1:0] ForwardBE,
@@ -34,9 +34,12 @@ always_comb begin
     else ForwardBE = 2'b00;
   end
 
-    assign lwStall = ((Rs1D == RdE) | (Rs2D == RdE)) & ResultSrcE0 ;
+    // Load in E: stall one cycle if D needs the load result (MEM-stage forwarding supplies data next cycle).
+    // Use ResultSrcE==01 (load) only — ResultSrcE[0] is also set for Zmmul (11) and would stall forever.
+    assign lwStall = (((Rs1D != 5'b0) && (Rs1D == RdE)) | ((Rs2D != 5'b0) && (Rs2D == RdE))) & (ResultSrcE == 2'b01);
     assign StallF = lwStall;
     assign StallD = lwStall;
+    // On load-use hazard, stall F/D and inject a bubble into E so the load can advance to M.
     assign FlushE = lwStall | PCSrcE;
     assign FlushD = PCSrcE;
 

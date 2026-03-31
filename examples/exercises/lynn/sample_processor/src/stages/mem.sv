@@ -18,7 +18,8 @@ module mem (input  logic clk, reset,
             output logic [4:0] RdW,
             output logic [31:0] ALUOutW,
             output logic [31:0] CSRDataW,
-            output logic [31:0] ReadDataW);
+            output logic [31:0] ReadDataW,
+            output logic [31:0] MemFwdData);
 
 logic [31:0] LoadData;
 
@@ -72,6 +73,7 @@ logic [31:0] LoadData;
         endcase
     end
 
+    assign MemFwdData = LoadData;
 
 always_ff @(posedge clk) begin
     if (reset | FlushW) begin

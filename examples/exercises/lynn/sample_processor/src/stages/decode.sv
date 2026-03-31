@@ -2,6 +2,7 @@
 
 module decode(input clk, reset,
     input  logic [31:0] InstrD, PCD,
+    input logic StallD,
     input logic FlushE,
     input logic [31:0] ResultW,
     input logic [4:0] RdW,
@@ -75,7 +76,7 @@ always_ff @(posedge clk) begin
         IsJumpE <= 0;
     end
 
-    else begin
+    else if (!StallD) begin
         PCE <= PCD;
         Funct3E <= Funct3D;
         RdE <= RdD;

@@ -25,13 +25,23 @@ define require_linker
 $(if $(strip $(LINKER)),,$(error LINKER is required. Call: make LINKER=/path/to/link.ld ...))
 endef
 
-.PHONY: all
+.PHONY: all sw_only
 all: $(WORK_DIR)/bringup.elf
+
+# Build: make sw_only   (from this directory) — ELF at work/sw_only.elf
+sw_only: $(WORK_DIR)/sw_only.elf
 
 $(WORK_DIR)/bringup.elf: $(SRC) Makefile
 	@$(require_linker)
 	@mkdir -p $(WORK_DIR)
 	$(GCC) $(CFLAGS) $(SRC) $(LDFLAGS) -o $@
+
+# Store-word isolation: only crt0 + sw_smoke + sw_test (no other insn tests)
+$(WORK_DIR)/sw_only.elf: $(CURDIR)/crt0.S $(CURDIR)/sw_smoke.S $(CURDIR)/sw_test.S Makefile
+	@$(require_linker)
+	@mkdir -p $(WORK_DIR)
+	$(GCC) $(CFLAGS) $(CURDIR)/crt0.S $(CURDIR)/sw_smoke.S $(CURDIR)/sw_test.S $(LDFLAGS) -o $@
+	@echo "[BRINGUP] Built $@ (sw-only smoke test)"
 
 .PHONY: clean
 clean:

@@ -55,6 +55,7 @@ logic [4:0] RdW;
 logic StallW, FlushW;
 
 logic [31:0] ReadDataW;
+logic [31:0] MemFwdData;
 
 // csr
 logic [31:0] CSRDataE, CSRDataM, CSRDataW;
@@ -66,23 +67,23 @@ assign FlushW = 0;
 
 fetch fetch(.clk, .reset, .Instr, .StallF, .StallD, .FlushD, .PCSrc(PCSrcE), .IEUAdr(IEUAdrE), .PCD, .PCF(PC), .InstrD);
 
-decode decode(.clk, .reset, .InstrD, .PCD, .FlushE, .RdW, .RegWriteW, .ResultW, .ALUResultSrcE, .RegWriteE, .MemWriteE, .BranchTaken, .ResultSrcE,
+decode decode(.clk, .reset, .InstrD, .PCD, .StallD, .FlushE, .RdW, .RegWriteW, .ResultW, .ALUResultSrcE, .RegWriteE, .MemWriteE, .BranchTaken, .ResultSrcE,
    .ALUSrcE, .ALUControlE, .MemEnE, .BranchE, .IsJumpE, .PCE, .Funct3E, .RdE, .ImmExtE, .RD1D, .RD2D, .RD1E, .RD2E, .InstrE, .CSRDataE);
 
 execute execute(.clk, .reset, .StallM, .FlushM, .ImmExtE, .Funct3E, .RD1E, .RD2E, .RdE, .ResultW, .CSRDataE, .PCE, .ALUResultSrcE, .RegWriteE, .MemWriteE,
-    .PCSrcE, .ALUSrcE, .ResultSrcE, .ALUControlE, .IsJumpE, .MemEnE, .BranchE, .ForwardAE, .ForwardBE, .Funct3M, .RdM, .RegWriteM, .BranchTaken, .ResultSrcM,
+    .PCSrcE, .ALUSrcE, .ResultSrcE, .ALUControlE, .IsJumpE, .MemEnE, .BranchE, .ForwardAE, .ForwardBE, .MemFwdData(MemFwdData), .Funct3M, .RdM, .RegWriteM, .BranchTaken, .ResultSrcM,
     .MemWriteM, .MemEnM(MemEn), .FSrcBM(WriteData), .IEUAdrE(IEUAdrE), .ALUOutM, .CSRDataM, .IEUAdrM(IEUAdrM));
 
 assign IEUAdr = IEUAdrM;
 
 mem mem(.clk, .reset, .StallW, .FlushW, .RegWriteM, .MemWriteM, .MemEn, .ResultSrcM, .Funct3M, .IEUAdrM(IEUAdrM),
-        .ReadData, .RdM, .WriteByteEn, .ALUOutM, .CSRDataM, .RegWriteW, .ResultSrcW, .ALUOutW, .RdW, .CSRDataW, .ReadDataW);
+        .ReadData, .RdM, .WriteByteEn, .ALUOutM, .CSRDataM, .RegWriteW, .ResultSrcW, .ALUOutW, .RdW, .CSRDataW, .ReadDataW, .MemFwdData(MemFwdData));
 
 writeback write(.ResultSrcW, .CSRDataW, .ALUOutW, .ReadDataW, .ResultW);
 
 // pipeline hazard
 hazard hazard(.Rs1E(InstrE[19:15]), .Rs2E(InstrE[24:20]), .RdM, .RdW, .RegWriteM, .RegWriteW, .Rs1D(InstrD[19:15]),
-            .Rs2D(InstrD[24:20]), .RdE, .ResultSrcE0(ResultSrcE[0]), .PCSrcE,
+            .Rs2D(InstrD[24:20]), .RdE, .ResultSrcE, .PCSrcE,
             .ForwardAE, .ForwardBE, .StallF, .StallD, .FlushE, .FlushD);
 
 assign WriteEn = | WriteByteEn;

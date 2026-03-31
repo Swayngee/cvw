@@ -16,6 +16,7 @@ module execute(input logic clk, reset,
                 input logic IsJumpE,
                 // hazard controls
                 input logic [1:0] ForwardAE, ForwardBE,
+                input logic [31:0] MemFwdData,
                 input logic FlushM, StallM,
                 output logic [2:0] Funct3M,
                 output logic [4:0] RdM,
@@ -32,14 +33,18 @@ module execute(input logic clk, reset,
                 output logic [31:0] IEUAdrM);
 
 logic [31:0] FSrcAE, FSrcBE_int, ALUResultE, PCLinkE, AltResultE, SrcA, SrcB;
+logic [31:0] MStageFwd;
 logic EqE, LTE, LTUE;
+
+// Forward from M: ALU result for most ops; memory read data for loads (ALUOutM holds address for lw)
+assign MStageFwd = (ResultSrcM == 2'b01) ? MemFwdData : ALUOutM;
 
 // RD muxes
 always_comb begin
     case (ForwardAE)
         2'b00: FSrcAE = RD1E;
         2'b01: FSrcAE = ResultW;
-        2'b10: FSrcAE = ALUOutM;
+        2'b10: FSrcAE = MStageFwd;
         default: FSrcAE = RD1E;
     endcase
 end
@@ -47,7 +52,7 @@ always_comb begin
     case (ForwardBE)
         2'b00: FSrcBE_int = RD2E;
         2'b01: FSrcBE_int = ResultW;
-        2'b10: FSrcBE_int = ALUOutM;
+        2'b10: FSrcBE_int = MStageFwd;
         default: FSrcBE_int = RD2E;
     endcase
 end

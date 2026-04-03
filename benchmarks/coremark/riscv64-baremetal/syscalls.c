@@ -1,4 +1,4 @@
-// See LICENSE for license details.
+
 
 #include <stdint.h>
 #include <string.h>
@@ -19,8 +19,7 @@ extern volatile uint64_t fromhost;
 
 
 void _send_char(char c) {
-  /*#error "You must implement the method _send_char to use this file!\n";
-  */
+  
   volatile unsigned char *THR=(unsigned char *)0x10000000;
   volatile unsigned char *LSR=(unsigned char *)0x10000005;
 
@@ -122,14 +121,14 @@ void printstr(const char* s)
 
 void __attribute__((weak)) thread_entry(int cid, int nc)
 {
-  // multi-threaded programs override this function.
-  // for the case of single-threaded programs, only let core 0 proceed.
+  
+  
   while (cid != 0);
 }
 
 int __attribute__((weak)) main(int argc, char** argv)
 {
-  // single-threaded programs override this function.
+  
   printstr("Implement main(), foo!\n");
   return -1;
 }
@@ -150,7 +149,7 @@ void _init(int cid, int nc)
   init_tls();
   thread_entry(cid, nc);
 
-  // only single-threaded programs should ever get here.
+  
   int ret = main(0, 0);
 
   char buf[NUM_COUNTERS * 32] __attribute__((aligned(64)));
@@ -197,18 +196,7 @@ void _init(int cid, int nc)
 #undef putchar
 int putchar(int ch)
 {
-  /*static __thread char buf[64] __attribute__((aligned(64)));
-  static __thread int buflen = 0;
-
-  buf[buflen++] = ch;
-
-  if (ch == '\n' || buflen == sizeof(buf))
-  {
-    syscall(SYS_write, 1, (uintptr_t)buf, buflen);
-    buflen = 0;
-  }
-
-  return 0;*/
+  
   _send_char(ch);
   return 0;
 
@@ -287,7 +275,7 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
     }
     fmt++;
 
-    // Process a %-escape sequence
+    
     last_fmt = fmt;
     padc = ' ';
     width = -1;
@@ -297,17 +285,17 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
   reswitch:
     switch (ch = *(unsigned char *) fmt++) {
 
-    // flag to pad on the right
+    
     case '-':
       padc = '-';
       goto reswitch;
 
-    // flag to pad with 0's instead of spaces
+    
     case '0':
       padc = '0';
       goto reswitch;
 
-    // width field
+    
     case '1':
     case '2':
     case '3':
@@ -343,17 +331,17 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
         width = precision, precision = -1;
       goto reswitch;
 
-    // long flag (doubled for long long)
+    
     case 'l':
       lflag++;
       goto reswitch;
 
-    // character
+    
     case 'c':
       putch(va_arg(ap, int), putdat);
       break;
 
-    // string
+    
     case 's':
       if ((p = va_arg(ap, char *)) == NULL)
         p = "(null)";
@@ -368,7 +356,7 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
         putch(' ', putdat);
       break;
 
-    // (signed) decimal
+    
     case 'd':
       num = getint(&ap, lflag);
       if ((long long) num < 0) {
@@ -378,26 +366,26 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
       base = 10;
       goto signed_number;
 
-    // unsigned decimal
+    
     case 'u':
       base = 10;
       goto unsigned_number;
 
-    // (unsigned) octal
+    
     case 'o':
-      // should do something with padding so it's always 3 octits
+      
       base = 8;
       goto unsigned_number;
 
-    // pointer
+    
     case 'p':
       static_assert(sizeof(long) == sizeof(void*));
       lflag = 1;
       putch('0', putdat);
       putch('x', putdat);
-      /* fall through to 'x' */
+      
 
-    // (unsigned) hexadecimal
+    
     case 'X':
     case 'x':
       base = 16;
@@ -407,12 +395,12 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
       printnum(putch, putdat, num, base, width, padc);
       break;
 
-    // escaped '%' character
+    
     case '%':
       putch(ch, putdat);
       break;
 
-    // unrecognized escape sequence - just print it literally
+    
     default:
       putch('%', putdat);
       fmt = last_fmt;
@@ -429,14 +417,14 @@ int printf(const char* fmt, ...)
   vprintfmt((void*)putchar, 0, fmt, ap);
 
   va_end(ap);
-  return 0; // incorrect return value, but who cares, anyway?
+  return 0; 
 }
 
 int puts(const char* s)
 {
   printf(s);
   printf("\n");
-  return 0; // incorrect return value, but who cares, anyway?
+  return 0; 
 }
 
 int sprintf(char* str, const char* fmt, ...)

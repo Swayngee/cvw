@@ -1,4 +1,4 @@
-// See LICENSE for license details.
+
 
 #ifndef __UTIL_H
 #define __UTIL_H
@@ -10,7 +10,7 @@
 static int verify(int n, const volatile int* test, const int* verify)
 {
   int i;
-  // Unrolled for faster verification
+  
   for (i = 0; i < n/2*2; i+=2)
   {
     int t0 = test[i], t1 = test[i+1];
@@ -26,7 +26,7 @@ static int verify(int n, const volatile int* test, const int* verify)
 static int verifyDouble(int n, const volatile double* test, const double* verify)
 {
   int i;
-  // Unrolled for faster verification
+  
   for (i = 0; i < n/2*2; i+=2)
   {
     double t0 = test[i], t1 = test[i+1];
@@ -85,4 +85,4 @@ static uintptr_t insn_len(uintptr_t pc)
              stringify(code), _c, _c/iter, 10*_c/iter%10, _c/_i, 10*_c/_i%10); \
   } while(0)
 
-#endif //__UTIL_H
+#endif 

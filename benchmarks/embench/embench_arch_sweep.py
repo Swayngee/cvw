@@ -1,8 +1,9 @@
-#!/usr/bin/env -S uv run --script
-# embench_arch_sweep.py
-# David_Harris@hmc.edu 16 November 2023
-# james.stine@okstate.edu 14 November 2025
 # SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+                                 
+                       
+                                       
+                                          
+                                                  
 
 import collections
 import os
@@ -14,7 +15,7 @@ archs = ["rv32i_zicsr", "rv32im_zicsr", "rv32imc_zicsr",
          "rv32imc_zba_zbb_zbc_zbs_zicsr", "rv32imafdc_zba_zbb_zbc_zbs_zicsr"]
 
 
-# Official Embench benchmarks (19) https://github.com/embench/embench-iot.git
+                                                                             
 benchmarks = [
     "aha-mont64", "crc32", "cubic", "edn", "huffbench", "matmult-int", "minver",
     "nbody", "nettle-aes", "nettle-sha256", "nsichneu", "picojpeg", "qrduino",
@@ -54,15 +55,15 @@ def tabulate_arch_sweep(directory):
             print(f"[WARN] No data parsed for {case}\n")
             continue
 
-        # Header
+                
         print("\t".join([""] + archs))
 
-        # Collect all unique programs across all architectures
+                                                              
         all_progs = set()
         for arch_data in d.values():
             all_progs.update(arch_data.keys())
 
-        # summary rows we don't want in the main table
+                                                      
         summary_rows = [
             "size geometric mean",
             "size geometric standard deviation",
@@ -70,15 +71,15 @@ def tabulate_arch_sweep(directory):
             "speed geometric standard deviation",
         ]
 
-        # filter these out of the main proglist
+                                               
         proglist = sorted(p for p in all_progs if p not in summary_rows)
 
-        # main table rows (benchmarks + extras like md5sum, primecount, tarfind)
+                                                                                
         for prog in proglist:
             row = [prog] + [d[a].get(prog, "n/a") for a in archs]
             print("\t".join(row))
 
-        # print any JSON-provided geometric summary rows at the bottom
+                                                                      
         for label in summary_rows:
             if label in all_progs:
                 row = [label] + [d[a].get(label, "n/a") for a in archs]
@@ -94,17 +95,17 @@ def tabulate_arch_sweep(directory):
 
 
 def run_arch_sweep():
-    # make a folder whose name depends on the date
+                                                  
     date_string = datetime.now().strftime("%Y%m%d_%H%M%S")
     target_dir = "run_" + date_string
     os.mkdir(target_dir)
 
-    # these are the four JSONs your Makefile creates in actual_embench_results/
+                                                                               
     results = [
         "SizeOpt_size", "SizeOpt_speed", "SpeedOpt_size", "SpeedOpt_speed",
     ]
 
-    # sweep the runs and save the results in the run directory
+                                                              
     for arch in archs:
         print(f"[INFO] Running make run ARCH={arch}")
         os.system("make clean")
@@ -125,5 +126,5 @@ def run_arch_sweep():
 
 if __name__ == "__main__":
     directory = run_arch_sweep()
-    # directory = "run_20231120_072037-caches"
+                                              
     tabulate_arch_sweep(directory)

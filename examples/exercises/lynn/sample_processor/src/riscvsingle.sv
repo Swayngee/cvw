@@ -1,19 +1,19 @@
 module riscvsingle (input   logic           clk,
         input   logic           reset,
 
-        output  logic [31:0]    PC,  // instruction memory target address
-        input   logic [31:0]    Instr, // instruction memory read data
+        output  logic [31:0]    PC,
+        input   logic [31:0]    Instr,
 
-        output  logic [31:0]    IEUAdr,  // data memory target address
-        input   logic [31:0]    ReadData, // data memory read data
-        output  logic [31:0]    WriteData, // data memory write data
+        output  logic [31:0]    IEUAdr,
+        input   logic [31:0]    ReadData,
+        output  logic [31:0]    WriteData,
 
         output  logic           MemEn,
         output  logic           WriteEn,
-        output  logic [3:0]     WriteByteEn  // strobes, 1 hot stating weather a byte should be written on a store
+        output  logic [3:0]     WriteByteEn
     );
 
-// fetch
+
 logic PCSrcE;
 logic [31:0] PCD, InstrD;
 
@@ -21,7 +21,7 @@ logic [31:0] IEUAdrE;
 
 logic StallF, StallD, FlushD;
 
-// decode
+
 logic ALUResultSrcE, RegWriteE, MemWriteE, IsJumpE;
 logic [1:0] ResultSrcE;
 logic MemEnE, BranchE;
@@ -34,7 +34,7 @@ logic [4:0] RdE;
 logic FlushE;
 
 
-// execute
+
 logic [31:0] ImmExtE, IEUAdrM;
 logic [31:0] RD1E, RD2E;
 logic [2:0] Funct3M;
@@ -46,7 +46,7 @@ logic [31:0] ALUOutM;
 logic [1:0] ForwardAE, ForwardBE;
 logic StallM, FlushM;
 
-// mem
+
 logic RegWriteW;
 logic [1:0] ResultSrcW;
 logic [31:0] ALUOutW;
@@ -57,7 +57,7 @@ logic StallW, FlushW;
 logic [31:0] ReadDataW;
 logic [31:0] MemFwdData;
 
-// csr
+
 logic [31:0] CSRDataE, CSRDataM, CSRDataW;
 
 assign StallM = 0;
@@ -81,7 +81,7 @@ mem mem(.clk, .reset, .StallW, .FlushW, .RegWriteM, .MemWriteM, .MemEn, .ResultS
 
 writeback write(.ResultSrcW, .CSRDataW, .ALUOutW, .ReadDataW, .ResultW);
 
-// pipeline hazard
+
 hazard hazard(.Rs1E(InstrE[19:15]), .Rs2E(InstrE[24:20]), .RdM, .RdW, .RegWriteM, .RegWriteW, .Rs1D(InstrD[19:15]),
             .Rs2D(InstrD[24:20]), .RdE, .ResultSrcE, .PCSrcE,
             .ForwardAE, .ForwardBE, .StallF, .StallD, .FlushE, .FlushD);
@@ -89,12 +89,12 @@ hazard hazard(.Rs1E(InstrE[19:15]), .Rs2E(InstrE[24:20]), .RdM, .RdW, .RegWriteM
 assign WriteEn = | WriteByteEn;
 
 
-//always_ff @(posedge clk) begin
-//    $display("TOP: IEUAdr=%08x WriteEn=%b MemEn=%b WriteByteEn=%04b",
-//        IEUAdr, WriteEn, MemEn, WriteByteEn);
-//end
 
-//always_ff @(posedge clk)
- //   $display("HAZ: Rs1E=%02d RdM=%02d RdW=%02d RegWriteM=%b RegWriteW=%b ForwardAE=%b",
- //       InstrE[19:15], RdM, RdW, RegWriteM, RegWriteW, ForwardAE);
+
+
+
+
+
+ 
+ 
 endmodule

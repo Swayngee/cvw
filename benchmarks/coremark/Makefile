@@ -1,5 +1,5 @@
-# Wally Coremark Makefile
-# Daniel Torres & David Harris 28 July 2022
+
+
 # SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
 
 PORT_DIR = $(CURDIR)/riscv64-baremetal
@@ -13,10 +13,10 @@ sources=$(cmbase)/core_main.c $(cmbase)/core_list_join.c $(cmbase)/coremark.h  \
 ABI := $(if $(findstring "64","$(XLEN)"),lp64,ilp32)
 ARCH := rv$(XLEN)im_zicsr_zba_zbb_zbs
 CONFIG := rv$(XLEN)gc
-#ARCH := rv$(XLEN)gc
-#ARCH := rv$(XLEN)imc_zicsr
-#ARCH := rv$(XLEN)im_zicsr
-#ARCH := rv$(XLEN)i_zicsr
+
+
+
+
 
 PORT_CFLAGS = -g -mabi=$(ABI) -march=$(ARCH) -static -falign-functions=16 \
 	-mbranch-cost=1 -DSKIP_DEFAULT_MEMSET -mtune=sifive-3-series -O3 -finline-functions -falign-jumps=4 \

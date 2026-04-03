@@ -1,4 +1,4 @@
-// need to do branches along with Is...(csr stuff)
+
 
 module decode(input clk, reset,
     input  logic [31:0] InstrD, PCD,
@@ -46,14 +46,14 @@ controller cont(.Op(InstrD[6:0]), .Funct3(InstrD[14:12]), .Funct7b5(InstrD[30]),
         .IsAdd(IsAddD), .IsBranch(IsBranchD),
         .IsLoad(IsLoadD), .IsStore(IsStoreD), .IsJump(IsJumpD), .IsShift(IsShiftD));
 
-// regfile, extend, csr
+
 regfile rf(.clk(clk), .WE3(RegWriteW), .PC(PCD), .Instr(InstrD), .A1(InstrD[19:15]), .A2(InstrD[24:20]), .A3(RdW), .WD3(ResultW), .RD1(RD1D), .RD2(RD2D));
 extend ext(.Instr(InstrD[31:7]), .ImmSrc(ImmSrcD), .ImmExt(ImmExtD));
 
 csr_unit csr (.clk(clk), .reset(reset), .csr_addr(InstrD[31:20]), .is_add(IsAddD), .is_branch_eval(IsBranchD), .is_branch_taken(BranchTaken), .is_load(IsLoadD), .is_store(IsStoreD), .is_jump(IsJumpD), .is_shift(IsShiftD), .is_mul(ResultSrcD == 2'b11), .csr_data(CSRDataD));
 
 
-// Pipelined reg 2
+
 always_ff @(posedge clk) begin
     if (reset | FlushE) begin
         PCE <= 32'd0;

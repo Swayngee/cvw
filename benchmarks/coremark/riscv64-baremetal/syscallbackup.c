@@ -1,4 +1,4 @@
-// See LICENSE for license details.
+
 
 #include <stdint.h>
 #include <string.h>
@@ -9,16 +9,16 @@
 #include "util.h"
 #undef printf
 #define SYS_write 64
-#define ZEROPAD   (1<<0)  /* Pad with zero */
-#define SIGN      (1<<1)  /* Unsigned/signed long */
-#define PLUS      (1<<2)  /* Show plus */
-#define SPACE     (1<<3)  /* Spacer */
-#define LEFT      (1<<4)  /* Left justified */
-#define HEX_PREP  (1<<5)  /* 0x */
-#define UPPERCASE (1<<6)  /* 'ABCDEF' */
+#define ZEROPAD   (1<<0)  
+#define SIGN      (1<<1)  
+#define PLUS      (1<<2)  
+#define SPACE     (1<<3)  
+#define LEFT      (1<<4)  
+#define HEX_PREP  (1<<5)  
+#define UPPERCASE (1<<6)  
 typedef size_t ee_size_t;
 #define is_digit(c) ((c) >= '0' && (c) <= '9')
-/*static ee_size_t strnlen(const char *s, ee_size_t count);*/
+
 #undef strcmp
 static char *digits = "0123456789abcdefghijklmnopqrstuvwxyz";
 static char *upper_digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -296,10 +296,10 @@ static char *flt(char *str, double num, int size, int precision, char fmt, int f
   char c, sign;
   int n, i;
 
-  // Left align means no zero padding
+  
   if (flags & LEFT) flags &= ~ZEROPAD;
 
-  // Determine padding and sign char
+  
   c = (flags & ZEROPAD) ? '0' : ' ';
   sign = 0;
   if (flags & SIGN)
@@ -322,11 +322,11 @@ static char *flt(char *str, double num, int size, int precision, char fmt, int f
     }
   }
 
-  // Compute the precision value
+  
   if (precision < 0)
-    precision = 6; // Default precision: 6
+    precision = 6; 
 
-  // Convert floating point number to text
+  
   parse_float(num, tmp, fmt, precision);
 
   if ((flags & HEX_PREP) && precision == 0) decimal_point(tmp);
@@ -334,7 +334,7 @@ static char *flt(char *str, double num, int size, int precision, char fmt, int f
 
   n = strnlen(tmp,256);
 
-  // Output number with alignment and padding
+  
   size -= n;
   if (!(flags & (ZEROPAD | LEFT))) while (size-- > 0) *str++ = ' ';
   if (sign) *str++ = sign;
@@ -398,11 +398,11 @@ static int ee_vsprintf(char *buf, const char *fmt, va_list args)
   char *str;
   char *s;
 
-  int flags;            // Flags to number()
+  int flags;            
 
-  int field_width;      // Width of output field
-  int precision;        // Min. # of digits for integers; max number of chars for from string
-  int qualifier;        // 'h', 'l', or 'L' for integer fields
+  int field_width;      
+  int precision;        
+  int qualifier;        
 
   for (str = buf; *fmt; fmt++)
   {
@@ -412,10 +412,10 @@ static int ee_vsprintf(char *buf, const char *fmt, va_list args)
       continue;
     }
 
-    // Process flags
+    
     flags = 0;
 repeat:
-    fmt++; // This also skips first '%'
+    fmt++; 
     switch (*fmt)
     {
       case '-': flags |= LEFT; goto repeat;
@@ -425,7 +425,7 @@ repeat:
       case '0': flags |= ZEROPAD; goto repeat;
     }
 
-    // Get field width
+    
     field_width = -1;
     if (is_digit(*fmt))
       field_width = skip_atoi(&fmt);
@@ -440,7 +440,7 @@ repeat:
       }
     }
 
-    // Get the precision
+    
     precision = -1;
     if (*fmt == '.')
     {
@@ -455,7 +455,7 @@ repeat:
       if (precision < 0) precision = 0;
     }
 
-    // Get the conversion qualifier
+    
     qualifier = -1;
     if (*fmt == 'l' || *fmt == 'L')
     {
@@ -463,7 +463,7 @@ repeat:
       fmt++;
     }
 
-    // Default base
+    
     base = 10;
 
     switch (*fmt)
@@ -502,7 +502,7 @@ repeat:
           str = iaddr(str, va_arg(args, unsigned char *), field_width, precision, flags);
         continue;
 
-      // Integer number formats - set up the flags and "break"
+      
       case 'o':
         base = 8;
         break;
@@ -590,11 +590,7 @@ void setStats(int enable)
 #undef READ_CTR
 }
 
-/*void __attribute__((noreturn)) tohost_exit(uintptr_t code)
-{
-  tohost = (code << 1) | 1;
-  while (1);
-}*/
+
 void __attribute__((noreturn))tohost_exit(uintptr_t code){
   tohost=(code<<1)|1;
   asm ("ecall");
@@ -623,14 +619,14 @@ void printstr(const char* s)
 
 void __attribute__((weak)) thread_entry(int cid, int nc)
 {
-  // multi-threaded programs override this function.
-  // for the case of single-threaded programs, only let core 0 proceed.
+  
+  
   while (cid != 0);
 }
 
 int __attribute__((weak)) main(int argc, char** argv)
 {
-  // single-threaded programs override this function.
+  
   printstr("Implement main(), foo!\n");
   return -1;
 }
@@ -651,7 +647,7 @@ void _init(int cid, int nc)
   init_tls();
   thread_entry(cid, nc);
 
-  // only single-threaded programs should ever get here.
+  
   int ret = main(0, 0);
 
   char buf[NUM_COUNTERS * 32] __attribute__((aligned(64)));
@@ -755,7 +751,7 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
     }
     fmt++;
 
-    // Process a %-escape sequence
+    
     last_fmt = fmt;
     padc = ' ';
     width = -1;
@@ -765,17 +761,17 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
   reswitch:
     switch (ch = *(unsigned char *) fmt++) {
 
-    // flag to pad on the right
+    
     case '-':
       padc = '-';
       goto reswitch;
 
-    // flag to pad with 0's instead of spaces
+    
     case '0':
       padc = '0';
       goto reswitch;
 
-    // width field
+    
     case '1':
     case '2':
     case '3':
@@ -811,17 +807,17 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
         width = precision, precision = -1;
       goto reswitch;
 
-    // long flag (doubled for long long)
+    
     case 'l':
       lflag++;
       goto reswitch;
 
-    // character
+    
     case 'c':
       putch(va_arg(ap, int), putdat);
       break;
 
-    // string
+    
     case 's':
       if ((p = va_arg(ap, char *)) == NULL)
         p = "(null)";
@@ -836,7 +832,7 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
         putch(' ', putdat);
       break;
 
-    // (signed) decimal
+    
     case 'd':
       num = getint(&ap, lflag);
       if ((long long) num < 0) {
@@ -846,26 +842,26 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
       base = 10;
       goto signed_number;
 
-    // unsigned decimal
+    
     case 'u':
       base = 10;
       goto unsigned_number;
 
-    // (unsigned) octal
+    
     case 'o':
-      // should do something with padding so it's always 3 octits
+      
       base = 8;
       goto unsigned_number;
 
-    // pointer
+    
     case 'p':
       static_assert(sizeof(long) == sizeof(void*));
       lflag = 1;
       putch('0', putdat);
       putch('x', putdat);
-      /* fall through to 'x' */
+      
 
-    // (unsigned) hexadecimal
+    
     case 'X':
     case 'x':
       base = 16;
@@ -875,12 +871,12 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
       printnum(putch, putdat, num, base, width, padc);
       break;
 
-    // escaped '%' character
+    
     case '%':
       putch(ch, putdat);
       break;
 
-    // unrecognized escape sequence - just print it literally
+    
     default:
       putch('%', putdat);
       fmt = last_fmt;
@@ -888,22 +884,11 @@ static void vprintfmt(void (*putch)(int, void**), void **putdat, const char *fmt
     }
   }
 }
-/*
-int printf(const char* fmt, ...)
-{
-  va_list ap;
-  va_start(ap, fmt);
 
-  vprintfmt((void*)putchar, 0, fmt, ap);
-
-  va_end(ap);
-  return 0; // incorrect return value, but who cares, anyway?
-}*/
 
 
 void _send_char(char c) {
-/*#error "You must implement the method _send_char to use this file!\n";
-*/
+
 volatile unsigned char *THR=(unsigned char *)0x10000000;
 volatile unsigned char *LSR=(unsigned char *)0x10000005;
 
@@ -969,7 +954,7 @@ void* memset(void* dest, int byte, size_t len)
   }
   return dest;
 }
-//recompile pls
+
 size_t strlen(const char *s)
 {
   const char *p = s;
@@ -978,13 +963,7 @@ size_t strlen(const char *s)
   return p - s;
 }
 
-/*size_t strnlen(const char *s, size_t n)
-{
-  const char *p = s;
-  while (n-- && *p)
-    p++;
-  return p - s;
-}*/
+
 
 int strcmp(const char* s1, const char* s2)
 {
@@ -1047,12 +1026,7 @@ int gg_printf(const char *fmt, ...)
   ee_vsprintf(buf, fmt, args);
   va_end(args);
   p=buf;
-  /* while (*p) {
-  _send_char(*p);
-  n++;
-  p++;
-  }
-*/
+  
 n=sendstring(p);
   return n;
 }
@@ -1062,7 +1036,7 @@ int puts(const char* s)
 {
   gg_printf(s);
   gg_printf("\n");
-  return 0; // incorrect return value, but who cares, anyway?
+  return 0; 
 }
 
 unsigned long getTimer(void){

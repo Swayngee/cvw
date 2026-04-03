@@ -1,6 +1,6 @@
-// James Kaden Cassidy
-// kacassidy@hmc.edu
-// 1/5/2026
+
+
+
 
 `ifndef PARAMETERS
 `define PARAMETERS
@@ -14,6 +14,6 @@
         `define XLEN 64
     `endif
 
-    //`define DEBUG
+    
 
 `endif

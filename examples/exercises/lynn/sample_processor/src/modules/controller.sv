@@ -19,49 +19,49 @@ module controller(
     logic [1:0] ALUOp;
 
     always_comb begin
-        // SAFE DEFAULTS: Clamps all signals to 0 to prevent ANY glitches or X-propagation
+        
         RegWrite = 0; ImmSrc = 3'b000; ALUSrc = 2'b00; ALUOp = 2'b00;
         ALUResultSrc = 0; MemWrite = 0; ResultSrc = 2'b00;
         Branch = 0; Jump = 0; MemEn = 0;
 
         case(Op)
-            7'b0000011: begin // LW
+            7'b0000011: begin
                 RegWrite = 1; ImmSrc = 3'b000; ALUSrc = 2'b01; ALUOp = 2'b00; MemEn = 1; ResultSrc = 2'b01;
             end
-            7'b0100011: begin // SW
+            7'b0100011: begin
                 ImmSrc = 3'b001; ALUSrc = 2'b01; ALUOp = 2'b00; MemWrite = 1; MemEn = 1;
             end
-            7'b0110011: begin // R-type / Zmmul
+            7'b0110011: begin
                 RegWrite = 1; ALUSrc = 2'b00; ALUOp = 2'b10;
-                if (Funct7b0) ResultSrc = 2'b11; // Zmmul
-                else          ResultSrc = 2'b00; // R-type
+                if (Funct7b0) ResultSrc = 2'b11;
+                else          ResultSrc = 2'b00;
             end
-            7'b0010011: begin // I-type
+            7'b0010011: begin
                 RegWrite = 1; ImmSrc = 3'b000; ALUSrc = 2'b01; ALUOp = 2'b10;
             end
-            7'b1100011: begin // Branch
+            7'b1100011: begin
                 ImmSrc = 3'b010; ALUSrc = 2'b11; ALUOp = 2'b00; Branch = 1;
             end
-            7'b1101111: begin // JAL
+            7'b1101111: begin
                 RegWrite = 1; ImmSrc = 3'b011; ALUSrc = 2'b11; ALUOp = 2'b00; ALUResultSrc = 1; Jump = 1;
             end
-            7'b1100111: begin // JALR
+            7'b1100111: begin
                 RegWrite = 1; ImmSrc = 3'b000; ALUSrc = 2'b01; ALUOp = 2'b00; ALUResultSrc = 1; Jump = 1;
             end
-            7'b0110111: begin // LUI
+            7'b0110111: begin
                 RegWrite = 1; ImmSrc = 3'b100; ALUSrc = 2'b01; ALUOp = 2'b00; ALUResultSrc = 1;
             end
-            7'b0010111: begin // AUIPC
+            7'b0010111: begin
                 RegWrite = 1; ImmSrc = 3'b100; ALUSrc = 2'b11; ALUOp = 2'b00;
             end
-            7'b1110011: begin // SYSTEM (CSR)
+            7'b1110011: begin
                 RegWrite = 1; ResultSrc = 2'b10;
             end
-            default: begin end // Keeps safe defaults
+            default: begin end
         endcase
     end
 
-    // ALU Control logic
+    
     always_comb begin
         if      (ALUOp == 2'b00) ALUControl = 4'b0000;
         else if (ALUOp == 2'b01) ALUControl = 4'b0001;

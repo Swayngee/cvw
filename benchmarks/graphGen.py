@@ -1,6 +1,7 @@
-#!/usr/bin/env -S uv run --script
-# Daniel Torres 2022
 # SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+                                 
+                    
+                                                  
 
 import json
 import subprocess
@@ -33,7 +34,7 @@ def loadEmbench(embenchPath, embenchData):
 
 def graphEmbench(embenchSpeedOpt_SpeedData, embenchSizeOpt_SpeedData, embenchSpeedOpt_SizeData, embenchSizeOpt_SizeData):
     fig = make_subplots(rows=2, cols=4,
-                        # subplot_titles( "Wally's Embench Cycles and Instret (with -O2)","Wally's Embench Cycles Per Instruction (with -O2)"))
+                                                                                                                                               
                         subplot_titles=( "Wally's Embench Cycles and Instret (with -O2)","Wally's Embench Cycles Per Instruction (with -O2)","Wally's Embench Speed Score (with -O2)","Wally's Embench Size Score (with -O2)",
                                      "Wally's Embench Cycles and Instret (with -Os)","Wally's Embench Cycles Per Instruction (with -Os)","Wally's Embench Speed Score (with -Os)","Wally's Embench Size Score (with -Os)"))
 
@@ -78,14 +79,14 @@ def graphEmbench(embenchSpeedOpt_SpeedData, embenchSizeOpt_SpeedData, embenchSpe
             orientation='h'),
             row=2,col=4)
 
-    #         facet_row="Score", facet_col="Optimization Flag",
-    #         category_orders={"Score": ["Cycles & Instr", "CPI", "SpeedScore", "SizeScore"],
-    #                           "Optimization Flag": ["O2", "Os"]}),
-    #         orientation='h')
+                                                               
+                                                                                             
+                                                                    
+                              
     fig.update_layout(height=1500,width=4000, title_text="Wally Embench Scores", showlegend=False)
 
     fig.write_image("figure.png", engine="kaleido")
-    # fig.show()
+                
 
 
 def main():
@@ -105,4 +106,4 @@ def main():
 if __name__ == '__main__':
     sys.exit(main())
 
-# "ls -Art ../addins/embench-iot/logs/*speed* | tail -n 1 " # gets most recent embench speed log
+                                                                                                

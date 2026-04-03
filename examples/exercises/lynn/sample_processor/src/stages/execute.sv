@@ -1,5 +1,5 @@
 module execute(input logic clk, reset,
-                //inputs for modules
+                
                 input logic [31:0] ImmExtE,
                 input logic [2:0] Funct3E,
                 input logic [31:0] RD1E, RD2E,
@@ -8,24 +8,24 @@ module execute(input logic clk, reset,
                 input logic [31:0] CSRDataE,
                 input logic [31:0] PCE,
 
-                // in controller enables
+                
                 input logic ALUResultSrcE, RegWriteE, MemWriteE,
                 input logic  MemEnE, BranchE,
                 input logic [1:0] ALUSrcE, ResultSrcE,
                 input logic [3:0] ALUControlE,
                 input logic IsJumpE,
-                // hazard controls
+                
                 input logic [1:0] ForwardAE, ForwardBE,
                 input logic [31:0] MemFwdData,
                 input logic FlushM, StallM,
                 output logic [2:0] Funct3M,
                 output logic [4:0] RdM,
-                // out controller enables
+                
                 output logic RegWriteM, BranchTaken,
                 output logic [1:0] ResultSrcM,
                 output logic MemWriteM,
                 output logic PCSrcE, MemEnM,
-                // datapath output
+                
                 output logic [31:0] FSrcBM,
                 output logic [31:0] IEUAdrE,
                 output logic [31:0] ALUOutM,
@@ -36,10 +36,10 @@ logic [31:0] FSrcAE, FSrcBE_int, ALUResultE, PCLinkE, AltResultE, SrcA, SrcB;
 logic [31:0] MStageFwd;
 logic EqE, LTE, LTUE;
 
-// Forward from M: ALU result for most ops; memory read data for loads (ALUOutM holds address for lw)
+
 assign MStageFwd = (ResultSrcM == 2'b01) ? MemFwdData : ALUOutM;
 
-// RD muxes
+
 always_comb begin
     case (ForwardAE)
         2'b00: FSrcAE = RD1E;
@@ -58,7 +58,7 @@ always_comb begin
     endcase
 end
 
-// comp, srcMux, ALU
+
 cmp cmp(.R1(FSrcAE), .R2(FSrcBE_int), .Eq(EqE), .LT(LTE), .LTU(LTUE));
 
 adder pcEadd4(.inputA(PCE), .inputB(32'd4), .result(PCLinkE));
@@ -87,22 +87,22 @@ assign BranchTaken = BranchE & ConditionMet;
 mux2 #(32) Pcplus(ImmExtE, PCLinkE, IsJumpE, AltResultE);
 
 logic [31:0] ALUOutE;
-// Result mux
+
 assign ALUOutE = ALUResultSrcE ? AltResultE : ALUResultE;
 
-// --- FIX: Replicate store data across the bus so it aligns with any WriteByteEn mask ---
+
 logic [31:0] StoreDataE;
 
 always_comb begin
     case (Funct3E)
-        3'b000:  StoreDataE = {4{FSrcBE_int[7:0]}};  // sb: replicate byte 4 times
-        3'b001:  StoreDataE = {2{FSrcBE_int[15:0]}}; // sh: replicate halfword 2 times
-        default: StoreDataE = FSrcBE_int;            // sw: use full 32 bits
+        3'b000:  StoreDataE = {4{FSrcBE_int[7:0]}};
+        3'b001:  StoreDataE = {2{FSrcBE_int[15:0]}};
+        default: StoreDataE = FSrcBE_int;
     endcase
 end
-// ---------------------------------------------------------------------------------------
 
-// Pipelined reg 3
+
+
 always_ff @(posedge clk) begin
     if (reset | FlushM) begin
         Funct3M <= 3'd0;
@@ -124,7 +124,7 @@ always_ff @(posedge clk) begin
         ALUOutM <= ALUOutE;
         CSRDataM <= CSRDataE;
         IEUAdrM <= IEUAdrE;
-        FSrcBM <= StoreDataE; // --- FIX: Replaced FSrcBE_int with StoreDataE ---
+        FSrcBM <= StoreDataE;
         MemWriteM <= MemWriteE;
         RegWriteM <= RegWriteE;
         MemEnM <= MemEnE;
@@ -132,11 +132,11 @@ always_ff @(posedge clk) begin
 end
 
 
-//always_ff @(posedge clk) begin
-    //if (!StallM && !FlushM && MemEnE) begin
-        //$display("EXEC->MEM: PC=%08x IEUAdrE=%08x ALUOutE=%08x MemWrite=%b ForwardAE=%b ForwardBE=%b SrcA=%08x SrcB=%08x",
-            //PCE, IEUAdrE, ALUOutE, MemWriteE, ForwardAE, ForwardBE, SrcA, SrcB);
-//end
-//end
+
+    
+        
+            
+
+
 
 endmodule

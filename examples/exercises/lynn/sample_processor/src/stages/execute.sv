@@ -48,6 +48,7 @@ always_comb begin
         default: FSrcAE = RD1E;
     endcase
 end
+
 always_comb begin
     case (ForwardBE)
         2'b00: FSrcBE_int = RD2E;
@@ -83,13 +84,23 @@ end
 assign PCSrcE = (BranchE & ConditionMet) | IsJumpE;
 
 assign BranchTaken = BranchE & ConditionMet;
-
-
 mux2 #(32) Pcplus(ImmExtE, PCLinkE, IsJumpE, AltResultE);
 
 logic [31:0] ALUOutE;
 // Result mux
 assign ALUOutE = ALUResultSrcE ? AltResultE : ALUResultE;
+
+// --- FIX: Replicate store data across the bus so it aligns with any WriteByteEn mask ---
+logic [31:0] StoreDataE;
+
+always_comb begin
+    case (Funct3E)
+        3'b000:  StoreDataE = {4{FSrcBE_int[7:0]}};  // sb: replicate byte 4 times
+        3'b001:  StoreDataE = {2{FSrcBE_int[15:0]}}; // sh: replicate halfword 2 times
+        default: StoreDataE = FSrcBE_int;            // sw: use full 32 bits
+    endcase
+end
+// ---------------------------------------------------------------------------------------
 
 // Pipelined reg 3
 always_ff @(posedge clk) begin
@@ -101,7 +112,6 @@ always_ff @(posedge clk) begin
         CSRDataM <= 32'd0;
         IEUAdrM <= 32'd0;
         FSrcBM <= 32'd0;
-
         MemWriteM <= 0;
         RegWriteM <= 0;
         MemEnM <= 0;
@@ -114,8 +124,7 @@ always_ff @(posedge clk) begin
         ALUOutM <= ALUOutE;
         CSRDataM <= CSRDataE;
         IEUAdrM <= IEUAdrE;
-        FSrcBM <= FSrcBE_int;
-
+        FSrcBM <= StoreDataE; // --- FIX: Replaced FSrcBE_int with StoreDataE ---
         MemWriteM <= MemWriteE;
         RegWriteM <= RegWriteE;
         MemEnM <= MemEnE;
@@ -127,7 +136,7 @@ end
     //if (!StallM && !FlushM && MemEnE) begin
         //$display("EXEC->MEM: PC=%08x IEUAdrE=%08x ALUOutE=%08x MemWrite=%b ForwardAE=%b ForwardBE=%b SrcA=%08x SrcB=%08x",
             //PCE, IEUAdrE, ALUOutE, MemWriteE, ForwardAE, ForwardBE, SrcA, SrcB);
-    //end
+//end
 //end
 
 endmodule

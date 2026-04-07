@@ -30,7 +30,6 @@ SYNTH_TOP 			?= $(PROCESSOR_TOP) # change to different module to find critical p
 #ARCH := rv$(XLEN)im_zicsr
 ARCH := rv$(XLEN)i_zicsr_zmmul
 
-# ---- Command line optional parameters ---- #
 ELFS 				?=
 GUI  				?= 0
 SAIL  				?= 0

@@ -1,15 +1,15 @@
 
-
 module decode(input clk, reset,
     input  logic [31:0] InstrD, PCD,
     input logic StallD,
     input logic FlushE,
     input logic [31:0] ResultW,
+    input logic [31:0] InstrW,
     input logic [4:0] RdW,
-    input logic RegWriteW, BranchTaken,
+    input logic RegWriteW,
     output logic  ALUResultSrcE, RegWriteE, MemWriteE,
     output logic [1:0] ResultSrcE,
-    output logic MemEnE, BranchE, IsJumpE,
+    output logic MemEnE, BranchE,
     output logic [1:0] ALUSrcE,
     output logic [3:0] ALUControlE,
 
@@ -20,7 +20,7 @@ module decode(input clk, reset,
     output logic [31:0] RD1D, RD2D,
     output logic [31:0] RD1E, RD2E,
     output logic [31:0] InstrE,
-    output logic [31:0] CSRDataE);
+    output logic IsAddE, IsBranchE, IsLoadE, IsStoreE, IsJumpE, IsShiftE, IsMulE);
 
 logic ALUResultSrcD, RegWriteD, MemWriteD;
 logic [1:0] ResultSrcD;
@@ -29,8 +29,7 @@ logic [1:0] ALUSrcD;
 logic [2:0] ImmSrcD;
 logic [3:0] ALUControlD;
 
-logic [31:0] CSRDataD;
-logic IsAddD, IsBranchD, IsLoadD, IsStoreD, IsJumpD, IsShiftD;
+logic IsAddD, IsBranchD, IsLoadD, IsStoreD, IsJumpD, IsShiftD, IsMulD;
 
 logic [31:0] ImmExtD;
 logic [2:0] Funct3D;
@@ -44,14 +43,11 @@ controller cont(.Op(InstrD[6:0]), .Funct3(InstrD[14:12]), .Funct7b5(InstrD[30]),
         .MemWrite(MemWriteD), .ALUSrc(ALUSrcD), .RegWrite(RegWriteD),
         .ImmSrc(ImmSrcD), .ALUControl(ALUControlD), .MemEn(MemEnD), .Branch(BranchD),
         .IsAdd(IsAddD), .IsBranch(IsBranchD),
-        .IsLoad(IsLoadD), .IsStore(IsStoreD), .IsJump(IsJumpD), .IsShift(IsShiftD));
+        .IsLoad(IsLoadD), .IsStore(IsStoreD), .IsJump(IsJumpD), .IsShift(IsShiftD), .IsMul(IsMulD));
 
 
 regfile rf(.clk(clk), .WE3(RegWriteW), .PC(PCD), .Instr(InstrD), .A1(InstrD[19:15]), .A2(InstrD[24:20]), .A3(RdW), .WD3(ResultW), .RD1(RD1D), .RD2(RD2D));
 extend ext(.Instr(InstrD[31:7]), .ImmSrc(ImmSrcD), .ImmExt(ImmExtD));
-
-csr_unit csr (.clk(clk), .reset(reset), .csr_addr(InstrD[31:20]), .is_add(IsAddD), .is_branch_eval(IsBranchD), .is_branch_taken(BranchTaken), .is_load(IsLoadD), .is_store(IsStoreD), .is_jump(IsJumpD), .is_shift(IsShiftD), .is_mul(ResultSrcD == 2'b11), .csr_data(CSRDataD));
-
 
 
 always_ff @(posedge clk) begin
@@ -63,7 +59,6 @@ always_ff @(posedge clk) begin
         RD2E <= 32'd0;
         ImmExtE <= 32'd0;
         InstrE <= 32'd0;
-        CSRDataE <= 32'd0;
         BranchE <= 0;
 
         ALUResultSrcE <= 0;
@@ -73,7 +68,14 @@ always_ff @(posedge clk) begin
         RegWriteE <= 0;
         ALUControlE <= 4'd0;
         MemEnE <= 0;
-        IsJumpE <= 0;
+
+        IsAddE    <= 0;
+        IsBranchE <= 0;
+        IsLoadE   <= 0;
+        IsStoreE  <= 0;
+        IsJumpE   <= 0;
+        IsShiftE  <= 0;
+        IsMulE    <= 0;
     end
 
     else if (!StallD) begin
@@ -84,7 +86,6 @@ always_ff @(posedge clk) begin
         RD2E <= RD2D;
         ImmExtE <= ImmExtD;
         InstrE <= InstrD;
-        CSRDataE <= CSRDataD;
         BranchE <= BranchD;
 
         ALUResultSrcE <= ALUResultSrcD;
@@ -94,7 +95,15 @@ always_ff @(posedge clk) begin
         RegWriteE <= RegWriteD;
         ALUControlE <= ALUControlD;
         MemEnE <= MemEnD;
-        IsJumpE <= IsJumpD;
+
+        IsAddE    <= IsAddD;
+        IsJumpE   <= IsJumpD;
+        IsBranchE <= IsBranchD;
+        IsLoadE   <= IsLoadD;
+        IsStoreE  <= IsStoreD;
+        IsShiftE  <= IsShiftD;
+        IsMulE    <= IsMulD;
+
     end
 end
 

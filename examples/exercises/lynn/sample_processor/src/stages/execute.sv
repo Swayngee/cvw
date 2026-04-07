@@ -1,40 +1,43 @@
 module execute(input logic clk, reset,
-                
+
                 input logic [31:0] ImmExtE,
                 input logic [2:0] Funct3E,
                 input logic [31:0] RD1E, RD2E,
                 input logic [4:0] RdE,
                 input logic [31:0] ResultW,
-                input logic [31:0] CSRDataE,
                 input logic [31:0] PCE,
+                input logic [31:0] InstrE,
+                input logic IsAddE, IsBranchE, IsLoadE, IsStoreE, IsJumpE, IsShiftE, IsMulE,
 
-                
+
                 input logic ALUResultSrcE, RegWriteE, MemWriteE,
                 input logic  MemEnE, BranchE,
                 input logic [1:0] ALUSrcE, ResultSrcE,
                 input logic [3:0] ALUControlE,
-                input logic IsJumpE,
-                
+
                 input logic [1:0] ForwardAE, ForwardBE,
                 input logic [31:0] MemFwdData,
                 input logic FlushM, StallM,
                 output logic [2:0] Funct3M,
                 output logic [4:0] RdM,
-                
-                output logic RegWriteM, BranchTaken,
+
+                output logic RegWriteM,
                 output logic [1:0] ResultSrcM,
                 output logic MemWriteM,
                 output logic PCSrcE, MemEnM,
-                
+                output logic [31:0] InstrM,
+
                 output logic [31:0] FSrcBM,
                 output logic [31:0] IEUAdrE,
                 output logic [31:0] ALUOutM,
-                output logic [31:0] CSRDataM,
-                output logic [31:0] IEUAdrM);
+                output logic [31:0] IEUAdrM,
+                output logic [31:0] MulResultM,
+                output logic IsAddM, IsBranchM, IsLoadM, IsStoreM, IsJumpM, IsShiftM, IsMulM, BranchTakenM);
 
 logic [31:0] FSrcAE, FSrcBE_int, ALUResultE, PCLinkE, AltResultE, SrcA, SrcB;
 logic [31:0] MStageFwd;
 logic EqE, LTE, LTUE;
+logic BranchTakenE;
 
 
 assign MStageFwd = (ResultSrcM == 2'b01) ? MemFwdData : ALUOutM;
@@ -59,6 +62,7 @@ always_comb begin
 end
 
 
+
 cmp cmp(.R1(FSrcAE), .R2(FSrcBE_int), .Eq(EqE), .LT(LTE), .LTU(LTUE));
 
 adder pcEadd4(.inputA(PCE), .inputB(32'd4), .result(PCLinkE));
@@ -68,6 +72,26 @@ mux2 #(32) srcbmux(FSrcBE_int, ImmExtE, ALUSrcE[0], SrcB);
 
 alu alu(.SrcA(SrcA), .SrcB(SrcB), .ALUControl(ALUControlE), .ALUResult(ALUResultE), .IEUAdr(IEUAdrE));
 
+logic [31:0] MulResultE;
+logic [63:0] mul_ss, mul_su, mul_uu;
+
+wire signed [63:0] ext_a_s = {{32{SrcA[31]}}, SrcA};
+wire signed [63:0] ext_b_s = {{32{SrcB[31]}}, SrcB};
+wire        [63:0] ext_b_u = {32'b0, SrcB};
+
+assign mul_ss = ext_a_s * ext_b_s;
+assign mul_su = ext_a_s * $signed(ext_b_u);
+assign mul_uu = {32'b0, SrcA} * {32'b0, SrcB};
+
+always_comb begin
+    case (Funct3E[1:0])
+        2'b00: MulResultE = mul_ss[31:0];
+        2'b01: MulResultE = mul_ss[63:32];
+        2'b10: MulResultE = mul_su[63:32];
+        2'b11: MulResultE = mul_uu[63:32];
+        default: MulResultE = 32'b0;
+    endcase
+end
 
 logic ConditionMet;
 always_comb begin
@@ -83,7 +107,7 @@ always_comb begin
 end
 assign PCSrcE = (BranchE & ConditionMet) | IsJumpE;
 
-assign BranchTaken = BranchE & ConditionMet;
+assign BranchTakenE = BranchE & ConditionMet;
 mux2 #(32) Pcplus(ImmExtE, PCLinkE, IsJumpE, AltResultE);
 
 logic [31:0] ALUOutE;
@@ -109,12 +133,23 @@ always_ff @(posedge clk) begin
         RdM <= 5'd0;
         ResultSrcM <= 0;
         ALUOutM <= 32'd0;
-        CSRDataM <= 32'd0;
         IEUAdrM <= 32'd0;
         FSrcBM <= 32'd0;
         MemWriteM <= 0;
         RegWriteM <= 0;
         MemEnM <= 0;
+        InstrM <= 0;
+        MulResultM <= 32'd0;
+
+        IsAddM <= 0;
+        IsBranchM <= 0;
+        IsLoadM <= 0;
+        IsStoreM <= 0;
+        IsJumpM <= 0;
+        IsShiftM <= 0;
+        IsMulM <= 0;
+        BranchTakenM <= 0;
+
     end
 
     else if (!StallM) begin
@@ -122,20 +157,30 @@ always_ff @(posedge clk) begin
         RdM <= RdE;
         ResultSrcM <= ResultSrcE;
         ALUOutM <= ALUOutE;
-        CSRDataM <= CSRDataE;
         IEUAdrM <= IEUAdrE;
         FSrcBM <= StoreDataE;
         MemWriteM <= MemWriteE;
         RegWriteM <= RegWriteE;
         MemEnM <= MemEnE;
+        InstrM <= InstrE;
+        MulResultM <= MulResultE;
+
+        IsAddM <= IsAddE;
+        IsBranchM <= IsBranchE;
+        IsLoadM <= IsLoadE;
+        IsStoreM <= IsStoreE;
+        IsJumpM <= IsJumpE;
+        IsShiftM <= IsShiftE;
+        IsMulM <= IsMulE;
+        BranchTakenM <= BranchTakenE;
     end
 end
 
 
 
-    
-        
-            
+
+
+
 
 
 

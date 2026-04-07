@@ -1,5 +1,4 @@
-module csr_unit(
-    input  logic        clk, reset,
+module csr_unit(input  logic        clk, reset, InstrRetired,
     input  logic [11:0] csr_addr,
     input  logic        is_add, is_branch_eval, is_branch_taken, is_load, is_store, is_jump, is_shift, is_mul,
     output logic [31:0] csr_data
@@ -7,14 +6,14 @@ module csr_unit(
     logic [63:0] cycle_count, insret_count, add_count, branch_eval_count, branch_taken_count;
     logic [63:0] load_count, store_count, jump_count, shift_count, mul_count;
 
-    always_ff @(posedge clk or posedge reset) begin
+    always_ff @(posedge clk) begin
         if (reset) begin
             cycle_count <= 0; insret_count <= 0; add_count <= 0; branch_eval_count <= 0;
             branch_taken_count <= 0; load_count <= 0; store_count <= 0; jump_count <= 0;
             shift_count <= 0; mul_count <= 0;
         end else begin
             cycle_count  <= cycle_count + 1'b1;
-            insret_count <= insret_count + 1'b1;
+            if (InstrRetired) insret_count <= insret_count + 64'd1;
             if (is_add)          add_count          <= add_count + 1'b1;
             if (is_branch_eval)  branch_eval_count  <= branch_eval_count + 1'b1;
             if (is_branch_taken) branch_taken_count <= branch_taken_count + 1'b1;

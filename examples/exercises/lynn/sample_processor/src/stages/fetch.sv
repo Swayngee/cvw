@@ -10,20 +10,20 @@ module fetch(input logic  clk, reset,
 
     logic [31:0] PCNext;
     logic [31:0] PCPlus4;
-    
-    
-    
+
+
+
     logic [31:0] entry_addr;
     initial begin
         entry_addr = 32'h8000_0000;
 
-        
+
         void'($value$plusargs("ENTRY_ADDR=%h", entry_addr));
 
         $display("[TB] ENTRY_ADDR = 0x%h", entry_addr);
     end
 
-    always_ff @(posedge clk or posedge reset) begin
+    always_ff @(posedge clk) begin
     if (reset)  PCF <= entry_addr;
     else if (!StallF)     PCF <= PCNext;
     end

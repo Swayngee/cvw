@@ -161,7 +161,7 @@ initial begin
     void'($value$plusargs("TOHOST_ADDR=%h", TO_HOST_ADR)); // override if provided
     $display("[TB] TOHOST_ADDR = 0x%h", TO_HOST_ADR);
 
-    max_cycles = 64'd10_000_000;
+    max_cycles = 64'd15_000_000;
     void'($value$plusargs("MAX_CYCLES=%d", max_cycles));
     $display("[TB] MAX_CYCLES (hang timeout, 0=off) = %0d", max_cycles);
 

@@ -13,23 +13,12 @@ module regfile(input   logic           clk,
 
 logic [31:0] rf[31:1];
 
-    
-    
-    
-    
 always_ff @(posedge clk) begin
     if (WE3 && A3 != 5'b0)begin
         rf[A3] <= WD3;
-        
+
     end
-    
     end
-
-
-    
-
-
-
 
 assign RD1 = (A1 == 5'd0) ? 32'd0 :
              ((WE3 && (A1 == A3) && (A3 != 5'd0)) ? WD3 : rf[A1]);

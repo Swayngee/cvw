@@ -1,14 +1,14 @@
 module mem (input  logic clk, reset,
             input  logic StallW, FlushW,
 
-            input  logic RegWriteM, MemEn, MemWriteM,
+            input  logic RegWriteM, MemEn, MemWriteM, IsAddM, IsBranchM, IsLoadM, IsStoreM, IsJumpM, IsShiftM, IsMulM, BranchTakenM,
             input  logic [1:0] ResultSrcM,
 
             input  logic [2:0] Funct3M,
             input  logic [31:0] IEUAdrM,
+            input logic [31:0] InstrM, MulResultM,
             input  logic [31:0] ALUOutM,
 
-            input  logic [31:0] CSRDataM,
             input  logic [31:0] ReadData,
             input  logic [4:0] RdM,
             output logic [3:0] WriteByteEn,
@@ -17,9 +17,10 @@ module mem (input  logic clk, reset,
             output logic [1:0] ResultSrcW,
             output logic [4:0] RdW,
             output logic [31:0] ALUOutW,
-            output logic [31:0] CSRDataW,
             output logic [31:0] ReadDataW,
-            output logic [31:0] MemFwdData);
+            output logic [31:0] MemFwdData,
+            output logic [31:0] InstrW, MulResultW,
+            output logic IsAddW, IsBranchW, IsLoadW, IsStoreW, IsJumpW, IsShiftW, IsMulW, BranchTakenW, MemWriteW);
 
 logic [31:0] LoadData;
 
@@ -82,16 +83,40 @@ always_ff @(posedge clk) begin
         ALUOutW    <= 32'd0;
 
         RdW        <= 5'd0;
-        CSRDataW   <= 32'd0;
         ReadDataW  <= 32'd0;
+        InstrW <= 32'd0;
+        MulResultW <= 32'd0;
+
+        IsAddW <= 0;
+        IsBranchW <= 0;
+        IsLoadW <= 0;
+        IsStoreW <= 0;
+        IsJumpW <= 0;
+        IsShiftW <= 0;
+        IsMulW <= 0;
+        BranchTakenW <= 0;
+        MemWriteW <= 0;
 end
     else if (!StallW) begin
         RegWriteW  <= RegWriteM;
         ResultSrcW <= ResultSrcM;
         ALUOutW    <= ALUOutM;
         RdW        <= RdM;
-        CSRDataW   <= CSRDataM;
         ReadDataW  <= LoadData;
+        InstrW <= InstrM;
+
+        MulResultW <= MulResultM;
+
+        IsAddW <= IsAddM;
+        IsBranchW <= IsBranchM;
+        IsLoadW <= IsLoadM;
+        IsStoreW <= IsStoreM;
+        IsJumpW <= IsJumpM;
+        IsShiftW <= IsShiftM;
+        IsMulW <= IsMulM;
+        BranchTakenW <= BranchTakenM;
+        MemWriteW <= MemWriteM;
+
 end
 end
 endmodule

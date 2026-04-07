@@ -10,8 +10,7 @@ module riscvsingle (input   logic           clk,
 
         output  logic           MemEn,
         output  logic           WriteEn,
-        output  logic [3:0]     WriteByteEn
-    );
+        output  logic [3:0]     WriteByteEn);
 
 
 logic PCSrcE;
@@ -22,12 +21,12 @@ logic [31:0] IEUAdrE;
 logic StallF, StallD, FlushD;
 
 
-logic ALUResultSrcE, RegWriteE, MemWriteE, IsJumpE;
+logic ALUResultSrcE, RegWriteE, MemWriteE;
 logic [1:0] ResultSrcE;
 logic MemEnE, BranchE;
 logic [1:0] ALUSrcE;
 logic [3:0] ALUControlE;
-logic [31:0] PCE, RD1D, RD2D, InstrE, ResultW;
+logic [31:0] PCE, RD1D, RD2D, InstrE, InstrW, ResultW;
 logic [2:0] Funct3E;
 logic [4:0] RdE;
 
@@ -39,9 +38,9 @@ logic [31:0] ImmExtE, IEUAdrM;
 logic [31:0] RD1E, RD2E;
 logic [2:0] Funct3M;
 logic [4:0] RdM;
-logic RegWriteM, MemWriteM, BranchTaken;
+logic RegWriteM, MemWriteM;
 logic [1:0] ResultSrcM;
-logic [31:0] ALUOutM;
+logic [31:0] ALUOutM, InstrM, MulResultM;
 
 logic [1:0] ForwardAE, ForwardBE;
 logic StallM, FlushM;
@@ -54,32 +53,33 @@ logic [4:0] RdW;
 
 logic StallW, FlushW;
 
-logic [31:0] ReadDataW;
+logic [31:0] ReadDataW, MulResultW;
 logic [31:0] MemFwdData;
-
-
-logic [31:0] CSRDataE, CSRDataM, CSRDataW;
 
 assign StallM = 0;
 assign FlushM = 0;
 assign StallW = 0;
 assign FlushW = 0;
 
+logic IsAddE, IsBranchE, IsLoadE, IsStoreE, IsJumpE, IsShiftE, IsMulE;
+logic IsAddM, IsBranchM, IsLoadM, IsStoreM, IsJumpM, IsShiftM, IsMulM, BranchTakenM;
+logic IsAddW, IsBranchW, IsLoadW, IsStoreW, IsJumpW, IsShiftW, IsMulW, BranchTakenW, MemWriteW;
+
 fetch fetch(.clk, .reset, .Instr, .StallF, .StallD, .FlushD, .PCSrc(PCSrcE), .IEUAdr(IEUAdrE), .PCD, .PCF(PC), .InstrD);
 
-decode decode(.clk, .reset, .InstrD, .PCD, .StallD, .FlushE, .RdW, .RegWriteW, .ResultW, .ALUResultSrcE, .RegWriteE, .MemWriteE, .BranchTaken, .ResultSrcE,
-   .ALUSrcE, .ALUControlE, .MemEnE, .BranchE, .IsJumpE, .PCE, .Funct3E, .RdE, .ImmExtE, .RD1D, .RD2D, .RD1E, .RD2E, .InstrE, .CSRDataE);
+decode decode(.clk, .reset, .InstrD, .PCD, .StallD, .FlushE, .RdW, .RegWriteW, .ResultW, .InstrW, .ALUResultSrcE, .RegWriteE, .MemWriteE, .ResultSrcE,
+   .ALUSrcE, .ALUControlE, .MemEnE, .BranchE, .PCE, .Funct3E, .RdE, .ImmExtE, .RD1D, .RD2D, .RD1E, .RD2E, .InstrE, .IsAddE, .IsBranchE, .IsLoadE, .IsStoreE, .IsJumpE, .IsShiftE, .IsMulE);
 
-execute execute(.clk, .reset, .StallM, .FlushM, .ImmExtE, .Funct3E, .RD1E, .RD2E, .RdE, .ResultW, .CSRDataE, .PCE, .ALUResultSrcE, .RegWriteE, .MemWriteE,
-    .PCSrcE, .ALUSrcE, .ResultSrcE, .ALUControlE, .IsJumpE, .MemEnE, .BranchE, .ForwardAE, .ForwardBE, .MemFwdData(MemFwdData), .Funct3M, .RdM, .RegWriteM, .BranchTaken, .ResultSrcM,
-    .MemWriteM, .MemEnM(MemEn), .FSrcBM(WriteData), .IEUAdrE(IEUAdrE), .ALUOutM, .CSRDataM, .IEUAdrM(IEUAdrM));
+execute execute(.clk, .reset, .StallM, .FlushM, .ImmExtE, .Funct3E, .RD1E, .RD2E, .RdE, .ResultW, .InstrE, .IsAddE, .IsBranchE, .IsLoadE, .IsStoreE, .IsJumpE, .IsShiftE, .IsMulE, .PCE, .ALUResultSrcE, .RegWriteE, .MemWriteE,
+    .PCSrcE, .ALUSrcE, .ResultSrcE, .ALUControlE, .MemEnE, .BranchE, .ForwardAE, .ForwardBE, .MemFwdData(MemFwdData), .Funct3M, .RdM, .RegWriteM, .ResultSrcM,
+    .MemWriteM, .MemEnM(MemEn), .FSrcBM(WriteData), .IEUAdrE(IEUAdrE), .ALUOutM, .InstrM, .IEUAdrM(IEUAdrM), .MulResultM, .IsAddM, .IsBranchM, .IsLoadM, .IsStoreM, .IsJumpM, .IsShiftM, .IsMulM, .BranchTakenM);
 
 assign IEUAdr = IEUAdrM;
 
-mem mem(.clk, .reset, .StallW, .FlushW, .RegWriteM, .MemWriteM, .MemEn, .ResultSrcM, .Funct3M, .IEUAdrM(IEUAdrM),
-        .ReadData, .RdM, .WriteByteEn, .ALUOutM, .CSRDataM, .RegWriteW, .ResultSrcW, .ALUOutW, .RdW, .CSRDataW, .ReadDataW, .MemFwdData(MemFwdData));
+mem mem(.clk, .reset, .StallW, .FlushW, .RegWriteM, .MulResultM, .MemWriteM, .IsAddM, .IsBranchM, .IsLoadM, .IsStoreM, .IsJumpM, .IsShiftM, .IsMulM, .BranchTakenM, .MemEn, .ResultSrcM, .Funct3M, .IEUAdrM(IEUAdrM), .InstrM,
+        .ReadData, .RdM, .WriteByteEn, .ALUOutM,  .RegWriteW, .ResultSrcW, .ALUOutW, .RdW, .ReadDataW, .MemFwdData(MemFwdData), .InstrW, .MulResultW, .IsAddW, .IsBranchW, .IsLoadW, .IsStoreW, .IsJumpW, .IsShiftW, .IsMulW, .BranchTakenW, .MemWriteW);
 
-writeback write(.ResultSrcW, .CSRDataW, .ALUOutW, .ReadDataW, .ResultW);
+writeback write(.clk, .reset, .MulResultW, .ResultSrcW, .MemWriteW, .RegWriteW, .InstrW, .ALUOutW, .ReadDataW, .IsAddW, .IsBranchW, .IsLoadW, .IsStoreW, .IsJumpW, .IsShiftW, .IsMulW, .BranchTakenW, .ResultW);
 
 
 hazard hazard(.Rs1E(InstrE[19:15]), .Rs2E(InstrE[24:20]), .RdM, .RdW, .RegWriteM, .RegWriteW, .Rs1D(InstrD[19:15]),
@@ -88,13 +88,4 @@ hazard hazard(.Rs1E(InstrE[19:15]), .Rs2E(InstrE[24:20]), .RdM, .RdW, .RegWriteM
 
 assign WriteEn = | WriteByteEn;
 
-
-
-
-
-
-
-
- 
- 
 endmodule

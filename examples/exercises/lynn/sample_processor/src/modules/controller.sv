@@ -12,14 +12,14 @@ module controller(
     output logic [2:0] ImmSrc,
     output logic [3:0] ALUControl,
     output logic       MemEn,
-    output logic       Branch, IsAdd, IsBranch,  IsLoad, IsStore, IsJump, IsShift
+    output logic       Branch, IsAdd, IsBranch,  IsLoad, IsStore, IsJump, IsShift, IsMul
 );
 
     logic Jump;
     logic [1:0] ALUOp;
 
     always_comb begin
-        
+
         RegWrite = 0; ImmSrc = 3'b000; ALUSrc = 2'b00; ALUOp = 2'b00;
         ALUResultSrc = 0; MemWrite = 0; ResultSrc = 2'b00;
         Branch = 0; Jump = 0; MemEn = 0;
@@ -61,7 +61,7 @@ module controller(
         endcase
     end
 
-    
+
     always_comb begin
         if      (ALUOp == 2'b00) ALUControl = 4'b0000;
         else if (ALUOp == 2'b01) ALUControl = 4'b0001;
@@ -86,4 +86,5 @@ module controller(
     assign IsStore     = (Op == 7'b0100011);
     assign IsJump      = Jump;
     assign IsShift     = ((Op == 7'b0110011) | (Op == 7'b0010011)) & ((Funct3 == 3'b001) | (Funct3 == 3'b101));
+    assign IsMul       = (Op == 7'b0110011) & Funct7b0;
 endmodule

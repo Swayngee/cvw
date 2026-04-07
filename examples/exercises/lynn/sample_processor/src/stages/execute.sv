@@ -40,7 +40,9 @@ logic EqE, LTE, LTUE;
 logic BranchTakenE;
 
 
-assign MStageFwd = (ResultSrcM == 2'b01) ? MemFwdData : ALUOutM;
+assign MStageFwd = (ResultSrcM == 2'b01) ? MemFwdData
+                   : (ResultSrcM == 2'b11) ? MulResultM
+                   : ALUOutM;
 
 
 always_comb begin

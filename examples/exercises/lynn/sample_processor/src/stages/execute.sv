@@ -154,7 +154,6 @@ always_ff @(posedge clk) begin
         IsShiftM <= 0;
         IsMulM <= 0;
         BranchTakenM <= 0;
-
     end
 
     else if (!StallM) begin
@@ -172,7 +171,6 @@ always_ff @(posedge clk) begin
         MulResultM <= MulResultE;
         DivResultM <= DivResultE;
         RemainM <= RemainE;
-
 
         IsAddM <= IsAddE;
         IsBranchM <= IsBranchE;

@@ -99,8 +99,9 @@ module controller(
 
     assign IsShift     = (((Op == 7'b0110011) | (Op == 7'b0010011)) & ((Funct3 == 3'b001) | (Funct3 == 3'b101)) & ~Funct7b0);
     assign IsMul    = (Op == 7'b0110011) & (Funct3[2] == 1'b0) & Funct7b0;
-    assign IsDiv    = (Op == 7'b0110011) & (Funct3[2] == 1'b1) & Funct7b0;
 
-    assign Unsigned_div = (Op == 7'b0110011) & ((Funct3 == 3'b101) | (Funct3 == 3'b111));
+    assign IsDiv    = ((Op == 7'b0110011) & (Funct3[2] == 1'b1) & Funct7b0);
+
+    assign Unsigned_div = (Op == 7'b0110011) & Funct7b0 & ((Funct3 == 3'b101) | (Funct3 == 3'b111));
 
 endmodule

@@ -13,10 +13,10 @@ module div (
     logic [4:0]  Count;
     logic        sign_Q, sign_R;
 
+
     typedef enum logic [1:0] {idle, calc, apply_sign, done} statetype;
     statetype state, nextstate;
 
-    // 1. Combinational Prep Logic
     always_comb begin
         abs_A = (SrcA[31] & ~is_unsigned) ? (~SrcA + 1'b1) : SrcA;
         abs_B = (SrcB[31] & ~is_unsigned) ? (~SrcB + 1'b1) : SrcB;
@@ -107,5 +107,4 @@ module div (
     end
 
     assign Remainder = Remain;
-
 endmodule

@@ -33,7 +33,7 @@ always_comb begin
     else ForwardBE = 2'b00;
   end
 
-assign lwStall = (RdE != 5'b0) && ((Rs1D == RdE) || (Rs2D == RdE)) && ((ResultSrcE == 3'b001) || (ResultSrcE == 3'b010) || (ResultSrcE == 3'b011) || (ResultSrcE == 3'b100));
+assign lwStall = (RdE != 5'b0) && ((Rs1D == RdE) || (Rs2D == RdE)) && ((ResultSrcE == 3'b001) || (ResultSrcE == 3'b010) || (ResultSrcE == 3'b011));
 
 assign divStall = div_busy;
 
@@ -44,5 +44,5 @@ assign StallD = lwStall | divStall;
 
 assign FlushE = lwStall | PCSrcE;
 assign FlushD = PCSrcE;
-assign FlushM = divStall;
+assign FlushM = 1'b0;
 endmodule

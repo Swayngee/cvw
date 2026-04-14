@@ -40,8 +40,10 @@ logic EqE, LTE, LTUE;
 logic BranchTakenE;
 
 assign MStageFwd = (ResultSrcM == 3'b001) ? MemFwdData
-                   : (ResultSrcM == 3'b011) ? MulResultM
-                   : ALUOutM;
+                 : (ResultSrcM == 3'b011) ? MulResultM
+                 : (ResultSrcM == 3'b100) ? DivResultM  // Added for DIV
+                 : (ResultSrcM == 3'b101) ? RemainM     // Added for REM
+                 : ALUOutM;
 
 
 always_comb begin

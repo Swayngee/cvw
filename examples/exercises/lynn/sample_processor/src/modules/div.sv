@@ -84,7 +84,6 @@ module div (
                     end
                 end
             end
-
                 calc: begin
                     if (R_temp >= Divisor) begin
                         Remain   <= R_temp - Divisor;

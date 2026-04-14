@@ -1,6 +1,6 @@
 module writeback(input logic clk, reset,
-                input logic [31:0] MulResultW,
-                input logic [1:0] ResultSrcW,
+                input logic [31:0] MulResultW, DivResultW, RemainW,
+                input logic [2:0] ResultSrcW,
                 input logic RegWriteW, MemWriteW,
                 input logic [31:0] InstrW,
                 input logic [31:0] ALUOutW, ReadDataW,
@@ -10,6 +10,13 @@ module writeback(input logic clk, reset,
 logic InstrRetired;
 assign InstrRetired =  RegWriteW | MemWriteW | IsBranchW | IsJumpW;
 
+//always_ff @(posedge clk) begin
+ //   if (!reset && RegWriteW) begin
+  //      $display("[TIME: %0t] WRITEBACK | InstrW: x%0d | Data: %h | ResultSrcW: %b",
+  //               $time, InstrW, ResultW, ResultSrcW);
+  //  end
+//end
+
 logic [31:0] CSRDataW;
 
 csr_unit csr (.clk(clk), .reset(reset), .InstrRetired(InstrRetired), .csr_addr(InstrW[31:20]), .is_add(IsAddW),
@@ -18,10 +25,12 @@ csr_unit csr (.clk(clk), .reset(reset), .InstrRetired(InstrRetired), .csr_addr(I
 
 always_comb begin
     case(ResultSrcW)
-        2'b00:   ResultW = ALUOutW;
-        2'b01:   ResultW = ReadDataW;
-        2'b10:   ResultW = CSRDataW;
-        2'b11:   ResultW = MulResultW;
+        3'b000:   ResultW = ALUOutW;
+        3'b001:   ResultW = ReadDataW;
+        3'b010:   ResultW = CSRDataW;
+        3'b011:   ResultW = MulResultW;
+        3'b100:   ResultW = DivResultW;
+        3'b101:   ResultW = RemainW;
         default: ResultW = ALUOutW;
     endcase
 

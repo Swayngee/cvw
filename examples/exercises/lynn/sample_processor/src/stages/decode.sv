@@ -8,7 +8,7 @@ module decode(input clk, reset,
     input logic [4:0] RdW,
     input logic RegWriteW,
     output logic  ALUResultSrcE, RegWriteE, MemWriteE,
-    output logic [1:0] ResultSrcE,
+    output logic [2:0] ResultSrcE,
     output logic MemEnE, BranchE,
     output logic [1:0] ALUSrcE,
     output logic [3:0] ALUControlE,
@@ -20,16 +20,16 @@ module decode(input clk, reset,
     output logic [31:0] RD1D, RD2D,
     output logic [31:0] RD1E, RD2E,
     output logic [31:0] InstrE,
-    output logic IsAddE, IsBranchE, IsLoadE, IsStoreE, IsJumpE, IsShiftE, IsMulE);
+    output logic IsAddE, IsBranchE, IsLoadE, IsStoreE, IsJumpE, IsShiftE, IsMulE, IsDivE, Unsigned_divE);
 
 logic ALUResultSrcD, RegWriteD, MemWriteD;
-logic [1:0] ResultSrcD;
+logic [2:0] ResultSrcD;
 logic MemEnD, BranchD;
 logic [1:0] ALUSrcD;
 logic [2:0] ImmSrcD;
 logic [3:0] ALUControlD;
 
-logic IsAddD, IsBranchD, IsLoadD, IsStoreD, IsJumpD, IsShiftD, IsMulD;
+logic IsAddD, IsBranchD, IsLoadD, IsStoreD, IsJumpD, IsShiftD, IsMulD, IsDivD, Unsigned_divD;
 
 logic [31:0] ImmExtD;
 logic [2:0] Funct3D;
@@ -43,7 +43,7 @@ controller cont(.Op(InstrD[6:0]), .Funct3(InstrD[14:12]), .Funct7b5(InstrD[30]),
         .MemWrite(MemWriteD), .ALUSrc(ALUSrcD), .RegWrite(RegWriteD),
         .ImmSrc(ImmSrcD), .ALUControl(ALUControlD), .MemEn(MemEnD), .Branch(BranchD),
         .IsAdd(IsAddD), .IsBranch(IsBranchD),
-        .IsLoad(IsLoadD), .IsStore(IsStoreD), .IsJump(IsJumpD), .IsShift(IsShiftD), .IsMul(IsMulD));
+        .IsLoad(IsLoadD), .IsStore(IsStoreD), .IsJump(IsJumpD), .IsShift(IsShiftD), .IsMul(IsMulD), .IsDiv(IsDivD), .Unsigned_div(Unsigned_divD));
 
 
 regfile rf(.clk(clk), .WE3(RegWriteW), .PC(PCD), .Instr(InstrD), .A1(InstrD[19:15]), .A2(InstrD[24:20]), .A3(RdW), .WD3(ResultW), .RD1(RD1D), .RD2(RD2D));
@@ -62,12 +62,13 @@ always_ff @(posedge clk) begin
         BranchE <= 0;
 
         ALUResultSrcE <= 0;
-        ResultSrcE <= 2'd0;
+        ResultSrcE <= 3'd0;
         MemWriteE <= 0;
         ALUSrcE <= 2'd0;
         RegWriteE <= 0;
         ALUControlE <= 4'd0;
         MemEnE <= 0;
+        Unsigned_divE <= 0;
 
         IsAddE    <= 0;
         IsBranchE <= 0;
@@ -76,6 +77,7 @@ always_ff @(posedge clk) begin
         IsJumpE   <= 0;
         IsShiftE  <= 0;
         IsMulE    <= 0;
+        IsDivE <= 0;
     end
 
     else if (!StallD) begin
@@ -103,6 +105,8 @@ always_ff @(posedge clk) begin
         IsStoreE  <= IsStoreD;
         IsShiftE  <= IsShiftD;
         IsMulE    <= IsMulD;
+        IsDivE <= IsDivD;
+        Unsigned_divE <= Unsigned_divD;
 
     end
 end

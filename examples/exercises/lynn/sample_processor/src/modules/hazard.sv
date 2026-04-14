@@ -6,14 +6,15 @@ module hazard (input  logic [4:0] Rs1E, Rs2E,
               input  logic       RegWriteW,
               input  logic [4:0] Rs1D, Rs2D,
               input  logic [4:0] RdE,
-              input  logic [1:0] ResultSrcE,
-              input  logic       PCSrcE,
+              input  logic [2:0] ResultSrcE,
+              input  logic       PCSrcE, IsDivE, busy, IsMulE,
+              input logic div_busy,
               output logic [1:0] ForwardAE,
               output logic [1:0] ForwardBE,
               output logic       StallF,
               output logic       StallD,
               output logic       FlushE,
-              output logic       FlushD);
+              output logic       FlushD, FlushM);
 
 
 logic lwStall;
@@ -32,13 +33,16 @@ always_comb begin
     else ForwardBE = 2'b00;
   end
 
-// Stall ID when EX holds a result not yet available for bypass (load, CSR read, MUL).
-assign lwStall = (RdE != 5'b0)
-    && ((Rs1D == RdE) || (Rs2D == RdE))
-    && ((ResultSrcE == 2'b01) || (ResultSrcE == 2'b10) || (ResultSrcE == 2'b11));
-assign StallF = lwStall;
-assign StallD = lwStall;
-    assign FlushE = lwStall | PCSrcE;
-    assign FlushD = PCSrcE;
+assign lwStall = (RdE != 5'b0) && ((Rs1D == RdE) || (Rs2D == RdE)) && ((ResultSrcE == 3'b001) || (ResultSrcE == 3'b010) || (ResultSrcE == 3'b011) || (ResultSrcE == 3'b100));
 
+assign divStall = div_busy;
+
+assign mulStall = IsMulE & ((Rs1D != 5'b0 && Rs1D == RdE) || (Rs2D != 5'b0 && Rs2D == RdE));
+
+assign StallF = lwStall | divStall;
+assign StallD = lwStall | divStall;
+
+assign FlushE = lwStall | PCSrcE;
+assign FlushD = PCSrcE;
+assign FlushM = divStall;
 endmodule

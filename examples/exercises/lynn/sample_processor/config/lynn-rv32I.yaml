@@ -12,7 +12,7 @@ implemented_extensions:
   - { name: Zicntr, version: ">= 2.0" }
   - { name: Zicsr, version: ">= 2.0" }
   - { name: Zihpm, version: ">= 2.0" }
-  - { name: Zmmul, version: ">= 1.0" }
+  - { name: M, version: ">= 2.0" }
 params:
   # Zicntr params
   TIME_CSR_IMPLEMENTED: true
@@ -46,6 +46,7 @@ params:
   PHYS_ADDR_WIDTH: 32
   M_MODE_ENDIANNESS: little
   MISA_CSR_IMPLEMENTED: true
+  MUTABLE_MISA_M: false
   MTVEC_ACCESS: rw
   MTVEC_MODES: [0, 1]
   MTVEC_BASE_ALIGNMENT_DIRECT: 4

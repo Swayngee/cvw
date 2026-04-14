@@ -1,5 +1,4 @@
 module execute(input logic clk, reset,
-
                 input logic [31:0] ImmExtE,
                 input logic [2:0] Funct3E,
                 input logic [31:0] RD1E, RD2E,
@@ -7,12 +6,13 @@ module execute(input logic clk, reset,
                 input logic [31:0] ResultW,
                 input logic [31:0] PCE,
                 input logic [31:0] InstrE,
-                input logic IsAddE, IsBranchE, IsLoadE, IsStoreE, IsJumpE, IsShiftE, IsMulE,
+                input logic IsAddE, IsBranchE, IsLoadE, IsStoreE, IsJumpE, IsShiftE, IsMulE, IsDivE, Unsigned_divE,
 
 
                 input logic ALUResultSrcE, RegWriteE, MemWriteE,
                 input logic  MemEnE, BranchE,
-                input logic [1:0] ALUSrcE, ResultSrcE,
+                input logic [1:0] ALUSrcE,
+                input logic [2:0] ResultSrcE,
                 input logic [3:0] ALUControlE,
 
                 input logic [1:0] ForwardAE, ForwardBE,
@@ -22,7 +22,7 @@ module execute(input logic clk, reset,
                 output logic [4:0] RdM,
 
                 output logic RegWriteM,
-                output logic [1:0] ResultSrcM,
+                output logic [2:0] ResultSrcM,
                 output logic MemWriteM,
                 output logic PCSrcE, MemEnM,
                 output logic [31:0] InstrM,
@@ -31,17 +31,16 @@ module execute(input logic clk, reset,
                 output logic [31:0] IEUAdrE,
                 output logic [31:0] ALUOutM,
                 output logic [31:0] IEUAdrM,
-                output logic [31:0] MulResultM,
-                output logic IsAddM, IsBranchM, IsLoadM, IsStoreM, IsJumpM, IsShiftM, IsMulM, BranchTakenM);
+                output logic [31:0] MulResultM, DivResultM, RemainM,
+                output logic IsAddM, IsBranchM, IsLoadM, IsStoreM, IsJumpM, IsShiftM, IsMulM, BranchTakenM, div_busy, busy);
 
-logic [31:0] FSrcAE, FSrcBE_int, ALUResultE, PCLinkE, AltResultE, SrcA, SrcB;
+logic [31:0] FSrcAE, FSrcBE_int, ALUResultE, PCLinkE, AltResultE, SrcA, SrcB, Quotient, DivResultE;
 logic [31:0] MStageFwd;
 logic EqE, LTE, LTUE;
 logic BranchTakenE;
 
-
-assign MStageFwd = (ResultSrcM == 2'b01) ? MemFwdData
-                   : (ResultSrcM == 2'b11) ? MulResultM
+assign MStageFwd = (ResultSrcM == 3'b001) ? MemFwdData
+                   : (ResultSrcM == 3'b011) ? MulResultM
                    : ALUOutM;
 
 
@@ -62,8 +61,6 @@ always_comb begin
         default: FSrcBE_int = RD2E;
     endcase
 end
-
-
 
 cmp cmp(.R1(FSrcAE), .R2(FSrcBE_int), .Eq(EqE), .LT(LTE), .LTU(LTUE));
 
@@ -94,6 +91,12 @@ always_comb begin
         default: MulResultE = 32'b0;
     endcase
 end
+
+logic [31:0] RemainE;
+
+div div(.clk(clk), .reset(reset), .div(IsDivE), .is_unsigned(Unsigned_divE), .SrcA(SrcA), .SrcB(SrcB), .Quotient(DivResultE), .Remainder(RemainE), .busy(busy));
+
+assign div_busy = busy;
 
 logic ConditionMet;
 always_comb begin
@@ -127,8 +130,6 @@ always_comb begin
     endcase
 end
 
-
-
 always_ff @(posedge clk) begin
     if (reset | FlushM) begin
         Funct3M <= 3'd0;
@@ -142,6 +143,8 @@ always_ff @(posedge clk) begin
         MemEnM <= 0;
         InstrM <= 0;
         MulResultM <= 32'd0;
+        DivResultM <= 32'd0;
+        RemainM <= 32'd0;
 
         IsAddM <= 0;
         IsBranchM <= 0;
@@ -165,7 +168,11 @@ always_ff @(posedge clk) begin
         RegWriteM <= RegWriteE;
         MemEnM <= MemEnE;
         InstrM <= InstrE;
+
         MulResultM <= MulResultE;
+        DivResultM <= DivResultE;
+        RemainM <= RemainE;
+
 
         IsAddM <= IsAddE;
         IsBranchM <= IsBranchE;
@@ -177,13 +184,4 @@ always_ff @(posedge clk) begin
         BranchTakenM <= BranchTakenE;
     end
 end
-
-
-
-
-
-
-
-
-
 endmodule

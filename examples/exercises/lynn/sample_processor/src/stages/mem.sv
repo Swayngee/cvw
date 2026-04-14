@@ -2,11 +2,11 @@ module mem (input  logic clk, reset,
             input  logic StallW, FlushW,
 
             input  logic RegWriteM, MemEn, MemWriteM, IsAddM, IsBranchM, IsLoadM, IsStoreM, IsJumpM, IsShiftM, IsMulM, BranchTakenM,
-            input  logic [1:0] ResultSrcM,
+            input  logic [2:0] ResultSrcM,
 
             input  logic [2:0] Funct3M,
             input  logic [31:0] IEUAdrM,
-            input logic [31:0] InstrM, MulResultM,
+            input logic [31:0] InstrM, MulResultM, DivResultM, RemainM,
             input  logic [31:0] ALUOutM,
 
             input  logic [31:0] ReadData,
@@ -14,12 +14,12 @@ module mem (input  logic clk, reset,
             output logic [3:0] WriteByteEn,
             output logic RegWriteW,
 
-            output logic [1:0] ResultSrcW,
+            output logic [2:0] ResultSrcW,
             output logic [4:0] RdW,
             output logic [31:0] ALUOutW,
             output logic [31:0] ReadDataW,
             output logic [31:0] MemFwdData,
-            output logic [31:0] InstrW, MulResultW,
+            output logic [31:0] InstrW, MulResultW, DivResultW, RemainW,
             output logic IsAddW, IsBranchW, IsLoadW, IsStoreW, IsJumpW, IsShiftW, IsMulW, BranchTakenW, MemWriteW);
 
 logic [31:0] LoadData;
@@ -79,13 +79,15 @@ logic [31:0] LoadData;
 always_ff @(posedge clk) begin
     if (reset | FlushW) begin
         RegWriteW  <= 1'b0;
-        ResultSrcW <= 2'b00;
+        ResultSrcW <= 3'b000;
         ALUOutW    <= 32'd0;
 
         RdW        <= 5'd0;
         ReadDataW  <= 32'd0;
         InstrW <= 32'd0;
         MulResultW <= 32'd0;
+        DivResultW <= 32'd0;
+        RemainW <= 32'd0;
 
         IsAddW <= 0;
         IsBranchW <= 0;
@@ -106,6 +108,8 @@ end
         InstrW <= InstrM;
 
         MulResultW <= MulResultM;
+        DivResultW <= DivResultM;
+        RemainW <= RemainM;
 
         IsAddW <= IsAddM;
         IsBranchW <= IsBranchM;

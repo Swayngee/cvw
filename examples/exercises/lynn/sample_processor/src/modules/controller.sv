@@ -5,14 +5,14 @@ module controller(
     input  logic       Funct7b5,
     input  logic       Funct7b0,
     output logic       ALUResultSrc,
-    output logic [1:0] ResultSrc,
+    output logic [2:0] ResultSrc,
     output logic       MemWrite,
     output logic       RegWrite,
     output logic [1:0] ALUSrc,
     output logic [2:0] ImmSrc,
     output logic [3:0] ALUControl,
     output logic       MemEn,
-    output logic       Branch, IsAdd, IsBranch,  IsLoad, IsStore, IsJump, IsShift, IsMul
+    output logic       Branch, IsAdd, IsBranch,  IsLoad, IsStore, IsJump, IsShift, IsMul, IsDiv, Unsigned_div
 );
 
     logic Jump;
@@ -21,21 +21,31 @@ module controller(
     always_comb begin
 
         RegWrite = 0; ImmSrc = 3'b000; ALUSrc = 2'b00; ALUOp = 2'b00;
-        ALUResultSrc = 0; MemWrite = 0; ResultSrc = 2'b00;
+        ALUResultSrc = 0; MemWrite = 0; ResultSrc = 3'b000;
         Branch = 0; Jump = 0; MemEn = 0;
 
         case(Op)
             7'b0000011: begin
-                RegWrite = 1; ImmSrc = 3'b000; ALUSrc = 2'b01; ALUOp = 2'b00; MemEn = 1; ResultSrc = 2'b01;
+                RegWrite = 1; ImmSrc = 3'b000; ALUSrc = 2'b01; ALUOp = 2'b00; MemEn = 1; ResultSrc = 3'b001;
             end
             7'b0100011: begin
                 ImmSrc = 3'b001; ALUSrc = 2'b01; ALUOp = 2'b00; MemWrite = 1; MemEn = 1;
             end
+
             7'b0110011: begin
                 RegWrite = 1; ALUSrc = 2'b00; ALUOp = 2'b10;
-                if (Funct7b0) ResultSrc = 2'b11;
-                else          ResultSrc = 2'b00;
+            if (Funct7b0) begin
+                case (Funct3)
+                    3'b000, 3'b001, 3'b010, 3'b011: ResultSrc = 3'b011;
+                    3'b100, 3'b101: ResultSrc = 3'b100;
+                    3'b110, 3'b111: ResultSrc = 3'b101;
+                    default: ResultSrc = 3'b000;
+                endcase
+            end else begin
+                ResultSrc = 3'b000;
             end
+            end
+
             7'b0010011: begin
                 RegWrite = 1; ImmSrc = 3'b000; ALUSrc = 2'b01; ALUOp = 2'b10;
             end
@@ -55,7 +65,7 @@ module controller(
                 RegWrite = 1; ImmSrc = 3'b100; ALUSrc = 2'b11; ALUOp = 2'b00;
             end
             7'b1110011: begin
-                RegWrite = 1; ResultSrc = 2'b10;
+                RegWrite = 1; ResultSrc = 3'b010;
             end
             default: begin end
         endcase
@@ -82,9 +92,15 @@ module controller(
 
     assign IsAdd       = ((Op == 7'b0110011) & (Funct3 == 3'b000) & ~Funct7b5 & ~Funct7b0) | ((Op == 7'b0010011) & (Funct3 == 3'b000));
     assign IsBranch    = Branch;
+
     assign IsLoad      = (Op == 7'b0000011);
     assign IsStore     = (Op == 7'b0100011);
     assign IsJump      = Jump;
-    assign IsShift     = ((Op == 7'b0110011) | (Op == 7'b0010011)) & ((Funct3 == 3'b001) | (Funct3 == 3'b101));
-    assign IsMul       = (Op == 7'b0110011) & Funct7b0;
+
+    assign IsShift     = (((Op == 7'b0110011) | (Op == 7'b0010011)) & ((Funct3 == 3'b001) | (Funct3 == 3'b101)) & ~Funct7b0);
+    assign IsMul    = (Op == 7'b0110011) & (Funct3[2] == 1'b0) & Funct7b0;
+    assign IsDiv    = (Op == 7'b0110011) & (Funct3[2] == 1'b1) & Funct7b0;
+
+    assign Unsigned_div = (Op == 7'b0110011) & ((Funct3 == 3'b101) | (Funct3 == 3'b111));
+
 endmodule

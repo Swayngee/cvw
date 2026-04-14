@@ -1,6 +1,7 @@
 
 module decode(input clk, reset,
     input  logic [31:0] InstrD, PCD,
+    input logic [31:0] PredPCNextD,
     input logic StallD,
     input logic FlushE,
     input logic [31:0] ResultW,
@@ -20,6 +21,7 @@ module decode(input clk, reset,
     output logic [31:0] RD1D, RD2D,
     output logic [31:0] RD1E, RD2E,
     output logic [31:0] InstrE,
+    output logic [31:0] PredNextPCE,
     output logic IsAddE, IsBranchE, IsLoadE, IsStoreE, IsJumpE, IsShiftE, IsMulE);
 
 logic ALUResultSrcD, RegWriteD, MemWriteD;
@@ -76,6 +78,7 @@ always_ff @(posedge clk) begin
         IsJumpE   <= 0;
         IsShiftE  <= 0;
         IsMulE    <= 0;
+        PredNextPCE <= 32'd0;
     end
 
     else if (!StallD) begin
@@ -103,7 +106,7 @@ always_ff @(posedge clk) begin
         IsStoreE  <= IsStoreD;
         IsShiftE  <= IsShiftD;
         IsMulE    <= IsMulD;
-
+        PredNextPCE <= PredPCNextD;
     end
 end
 

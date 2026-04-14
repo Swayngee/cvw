@@ -18,8 +18,10 @@ module execute(input logic clk, reset,
                 input logic [1:0] ForwardAE, ForwardBE,
                 input logic [31:0] MemFwdData,
                 input logic FlushM, StallM,
+                input logic [31:0] PredNextPCE,
                 output logic [2:0] Funct3M,
                 output logic [4:0] RdM,
+                output logic [31:0] PCM,
 
                 output logic RegWriteM,
                 output logic [1:0] ResultSrcM,
@@ -32,7 +34,10 @@ module execute(input logic clk, reset,
                 output logic [31:0] ALUOutM,
                 output logic [31:0] IEUAdrM,
                 output logic [31:0] MulResultM,
-                output logic IsAddM, IsBranchM, IsLoadM, IsStoreM, IsJumpM, IsShiftM, IsMulM, BranchTakenM);
+                output logic IsAddM, IsBranchM, IsLoadM, IsStoreM, IsJumpM, IsShiftM, IsMulM, BranchTakenM,
+
+                output logic [31:0] PCCorE,
+                output logic MisPredE);
 
 logic [31:0] FSrcAE, FSrcBE_int, ALUResultE, PCLinkE, AltResultE, SrcA, SrcB;
 logic [31:0] MStageFwd;
@@ -110,6 +115,9 @@ end
 assign PCSrcE = (BranchE & ConditionMet) | IsJumpE;
 
 assign BranchTakenE = BranchE & ConditionMet;
+
+assign PCCorE = PCSrcE ? {IEUAdrE[31:1], 1'b0} : PCLinkE;
+assign MisPredE = (IsBranchE | IsJumpE) && (PCCorE != PredNextPCE);
 mux2 #(32) Pcplus(ImmExtE, PCLinkE, IsJumpE, AltResultE);
 
 logic [31:0] ALUOutE;
@@ -151,10 +159,12 @@ always_ff @(posedge clk) begin
         IsShiftM <= 0;
         IsMulM <= 0;
         BranchTakenM <= 0;
+        PCM <= 32'd0;
 
     end
 
     else if (!StallM) begin
+        PCM <= PCE;
         Funct3M <= Funct3E;
         RdM <= RdE;
         ResultSrcM <= ResultSrcE;
@@ -177,13 +187,5 @@ always_ff @(posedge clk) begin
         BranchTakenM <= BranchTakenE;
     end
 end
-
-
-
-
-
-
-
-
 
 endmodule

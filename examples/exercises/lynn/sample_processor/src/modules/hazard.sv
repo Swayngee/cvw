@@ -7,7 +7,7 @@ module hazard (input  logic [4:0] Rs1E, Rs2E,
               input  logic [4:0] Rs1D, Rs2D,
               input  logic [4:0] RdE,
               input  logic [1:0] ResultSrcE,
-              input  logic       PCSrcE,
+              input  logic       MisPredE,
               output logic [1:0] ForwardAE,
               output logic [1:0] ForwardBE,
               output logic       StallF,
@@ -38,7 +38,7 @@ assign lwStall = (RdE != 5'b0)
     && ((ResultSrcE == 2'b01) || (ResultSrcE == 2'b10) || (ResultSrcE == 2'b11));
 assign StallF = lwStall;
 assign StallD = lwStall;
-    assign FlushE = lwStall | PCSrcE;
-    assign FlushD = PCSrcE;
+    assign FlushE = lwStall | MisPredE;
+    assign FlushD = MisPredE;
 
 endmodule

@@ -1,17 +1,16 @@
 module fetch(input logic  clk, reset,
         input logic [31:0] Instr,
         input logic StallF, StallD, FlushD,
-        input logic PCSrc,
-        input logic [31:0]    IEUAdr,
+        input logic MisPredE,
+        input logic [31:0] PCCorE,
+        input logic [31:0] PredPCNext,
         output logic [31:0]    PCD,
         output logic [31:0] PCF,
         output logic [31:0] InstrD);
 
 
-    logic [31:0] PCNext;
     logic [31:0] PCPlus4;
-
-
+    logic [31:0] PCNext;
 
     logic [31:0] entry_addr;
     initial begin
@@ -29,7 +28,7 @@ module fetch(input logic  clk, reset,
     end
 
     adder pcadd4(PCF, 32'd4, PCPlus4);
-    mux2 #(32) pcmux(PCPlus4, {IEUAdr[31:1], 1'b0}, PCSrc, PCNext);
+    assign PCNext = MisPredE ? PCCorE : PredPCNext;
 
 
 always_ff @(posedge clk) begin

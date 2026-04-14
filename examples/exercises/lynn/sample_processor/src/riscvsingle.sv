@@ -1,3 +1,5 @@
+// Branch predictor: default 2-bit PHT + direct-mapped BTB (see branch_predict BPRED_TYPE).
+
 module riscvsingle (input   logic           clk,
         input   logic           reset,
 
@@ -14,6 +16,12 @@ module riscvsingle (input   logic           clk,
 
 
 logic PCSrcE;
+logic MisPredE;
+logic [31:0] PCCorE;
+logic [31:0] PredPCNext;
+logic [31:0] PredPCNextD;
+logic [31:0] PredNextPCE;
+logic [31:0] PCM;
 logic [31:0] PCD, InstrD;
 
 logic [31:0] IEUAdrE;
@@ -65,14 +73,22 @@ logic IsAddE, IsBranchE, IsLoadE, IsStoreE, IsJumpE, IsShiftE, IsMulE;
 logic IsAddM, IsBranchM, IsLoadM, IsStoreM, IsJumpM, IsShiftM, IsMulM, BranchTakenM;
 logic IsAddW, IsBranchW, IsLoadW, IsStoreW, IsJumpW, IsShiftW, IsMulW, BranchTakenW, MemWriteW;
 
-fetch fetch(.clk, .reset, .Instr, .StallF, .StallD, .FlushD, .PCSrc(PCSrcE), .IEUAdr(IEUAdrE), .PCD, .PCF(PC), .InstrD);
+branch_predict #(.BPRED_TYPE(0), .INDEX_BITS(6)) bp (
+    .clk, .reset,
+    .StallD, .FlushD,
+    .StallM, .FlushM,
+    .PCF(PC), .Instr,
+    .PCM, .IsBranchM, .IsJumpM, .BranchTakenM, .IEUAdrM,
+    .PredPCNext, .PredPCNextD);
 
-decode decode(.clk, .reset, .InstrD, .PCD, .StallD, .FlushE, .RdW, .RegWriteW, .ResultW, .InstrW, .ALUResultSrcE, .RegWriteE, .MemWriteE, .ResultSrcE,
-   .ALUSrcE, .ALUControlE, .MemEnE, .BranchE, .PCE, .Funct3E, .RdE, .ImmExtE, .RD1D, .RD2D, .RD1E, .RD2E, .InstrE, .IsAddE, .IsBranchE, .IsLoadE, .IsStoreE, .IsJumpE, .IsShiftE, .IsMulE);
+fetch fetch(.clk, .reset, .Instr, .StallF, .StallD, .FlushD, .MisPredE, .PCCorE, .PredPCNext, .PCD, .PCF(PC), .InstrD);
 
-execute execute(.clk, .reset, .StallM, .FlushM, .ImmExtE, .Funct3E, .RD1E, .RD2E, .RdE, .ResultW, .InstrE, .IsAddE, .IsBranchE, .IsLoadE, .IsStoreE, .IsJumpE, .IsShiftE, .IsMulE, .PCE, .ALUResultSrcE, .RegWriteE, .MemWriteE,
-    .PCSrcE, .ALUSrcE, .ResultSrcE, .ALUControlE, .MemEnE, .BranchE, .ForwardAE, .ForwardBE, .MemFwdData(MemFwdData), .Funct3M, .RdM, .RegWriteM, .ResultSrcM,
-    .MemWriteM, .MemEnM(MemEn), .FSrcBM(WriteData), .IEUAdrE(IEUAdrE), .ALUOutM, .InstrM, .IEUAdrM(IEUAdrM), .MulResultM, .IsAddM, .IsBranchM, .IsLoadM, .IsStoreM, .IsJumpM, .IsShiftM, .IsMulM, .BranchTakenM);
+decode decode(.clk, .reset, .InstrD, .PCD, .PredPCNextD, .StallD, .FlushE, .RdW, .RegWriteW, .ResultW, .InstrW, .ALUResultSrcE, .RegWriteE, .MemWriteE, .ResultSrcE,
+   .ALUSrcE, .ALUControlE, .MemEnE, .BranchE, .PCE, .Funct3E, .RdE, .ImmExtE, .RD1D, .RD2D, .RD1E, .RD2E, .InstrE, .PredNextPCE, .IsAddE, .IsBranchE, .IsLoadE, .IsStoreE, .IsJumpE, .IsShiftE, .IsMulE);
+
+execute execute(.clk, .reset, .StallM, .FlushM, .PredNextPCE, .ImmExtE, .Funct3E, .RD1E, .RD2E, .RdE, .ResultW, .InstrE, .IsAddE, .IsBranchE, .IsLoadE, .IsStoreE, .IsJumpE, .IsShiftE, .IsMulE, .PCE, .ALUResultSrcE, .RegWriteE, .MemWriteE,
+    .PCSrcE, .ALUSrcE, .ResultSrcE, .ALUControlE, .MemEnE, .BranchE, .ForwardAE, .ForwardBE, .MemFwdData(MemFwdData), .Funct3M, .RdM, .PCM, .RegWriteM, .ResultSrcM,
+    .MemWriteM, .MemEnM(MemEn), .FSrcBM(WriteData), .IEUAdrE(IEUAdrE), .ALUOutM, .InstrM, .IEUAdrM(IEUAdrM), .MulResultM, .IsAddM, .IsBranchM, .IsLoadM, .IsStoreM, .IsJumpM, .IsShiftM, .IsMulM, .BranchTakenM, .PCCorE, .MisPredE);
 
 assign IEUAdr = IEUAdrM;
 
@@ -83,7 +99,7 @@ writeback write(.clk, .reset, .MulResultW, .ResultSrcW, .MemWriteW, .RegWriteW, 
 
 
 hazard hazard(.Rs1E(InstrE[19:15]), .Rs2E(InstrE[24:20]), .RdM, .RdW, .RegWriteM, .RegWriteW, .Rs1D(InstrD[19:15]),
-            .Rs2D(InstrD[24:20]), .RdE, .ResultSrcE, .PCSrcE,
+            .Rs2D(InstrD[24:20]), .RdE, .ResultSrcE, .MisPredE,
             .ForwardAE, .ForwardBE, .StallF, .StallD, .FlushE, .FlushD);
 
 assign WriteEn = | WriteByteEn;

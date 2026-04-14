@@ -71,26 +71,29 @@ mux2 #(32) srcbmux(FSrcBE_int, ImmExtE, ALUSrcE[0], SrcB);
 
 alu alu(.SrcA(SrcA), .SrcB(SrcB), .ALUControl(ALUControlE), .ALUResult(ALUResultE), .IEUAdr(IEUAdrE));
 
-logic [31:0] MulResultE;
-logic [63:0] mul_ss, mul_su, mul_uu;
+logic [31:0] MulSrcAM, MulSrcBM, MulResultCalcM;
+logic [1:0]  MulFunct3M;
+logic [63:0] mul_ss_m, mul_su_m, mul_uu_m;
 
-wire signed [63:0] ext_a_s = {{32{SrcA[31]}}, SrcA};
-wire signed [63:0] ext_b_s = {{32{SrcB[31]}}, SrcB};
-wire        [63:0] ext_b_u = {32'b0, SrcB};
+wire signed [63:0] ext_a_s_m = {{32{MulSrcAM[31]}}, MulSrcAM};
+wire signed [63:0] ext_b_s_m = {{32{MulSrcBM[31]}}, MulSrcBM};
+wire        [63:0] ext_b_u_m = {32'b0, MulSrcBM};
 
-assign mul_ss = ext_a_s * ext_b_s;
-assign mul_su = ext_a_s * $signed(ext_b_u);
-assign mul_uu = {32'b0, SrcA} * {32'b0, SrcB};
+assign mul_ss_m = ext_a_s_m * ext_b_s_m;
+assign mul_su_m = ext_a_s_m * $signed(ext_b_u_m);
+assign mul_uu_m = {32'b0, MulSrcAM} * {32'b0, MulSrcBM};
 
 always_comb begin
-    case (Funct3E[1:0])
-        2'b00: MulResultE = mul_ss[31:0];
-        2'b01: MulResultE = mul_ss[63:32];
-        2'b10: MulResultE = mul_su[63:32];
-        2'b11: MulResultE = mul_uu[63:32];
-        default: MulResultE = 32'b0;
+    case (MulFunct3M)
+        2'b00: MulResultCalcM = mul_ss_m[31:0];
+        2'b01: MulResultCalcM = mul_ss_m[63:32];
+        2'b10: MulResultCalcM = mul_su_m[63:32];
+        2'b11: MulResultCalcM = mul_uu_m[63:32];
+        default: MulResultCalcM = 32'b0;
     endcase
 end
+
+assign MulResultM = MulResultCalcM;
 
 logic [31:0] RemainE;
 
@@ -142,9 +145,11 @@ always_ff @(posedge clk) begin
         RegWriteM <= 0;
         MemEnM <= 0;
         InstrM <= 0;
-        MulResultM <= 32'd0;
         DivResultM <= 32'd0;
         RemainM <= 32'd0;
+        MulSrcAM <= 32'd0;
+        MulSrcBM <= 32'd0;
+        MulFunct3M <= 2'd0;
 
         IsAddM <= 0;
         IsBranchM <= 0;
@@ -168,9 +173,11 @@ always_ff @(posedge clk) begin
         MemEnM <= MemEnE;
         InstrM <= InstrE;
 
-        MulResultM <= MulResultE;
         DivResultM <= DivResultE;
         RemainM <= RemainE;
+        MulSrcAM <= SrcA;
+        MulSrcBM <= SrcB;
+        MulFunct3M <= Funct3E[1:0];
 
         IsAddM <= IsAddE;
         IsBranchM <= IsBranchE;
@@ -182,4 +189,5 @@ always_ff @(posedge clk) begin
         BranchTakenM <= BranchTakenE;
     end
 end
+
 endmodule

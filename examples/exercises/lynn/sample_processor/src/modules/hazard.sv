@@ -17,7 +17,7 @@ module hazard (input  logic [4:0] Rs1E, Rs2E,
               output logic       FlushD, FlushM);
 
 
-logic lwStall;
+logic lwStall, divStall, mulStall;
 always_comb begin
     if (Rs1E != 5'b0 && Rs1E == RdM && RegWriteM)
         ForwardAE = 2'b10;
@@ -33,16 +33,17 @@ always_comb begin
     else ForwardBE = 2'b00;
   end
 
-assign lwStall = (RdE != 5'b0) && ((Rs1D == RdE) || (Rs2D == RdE)) && ((ResultSrcE == 3'b001) || (ResultSrcE == 3'b010) || (ResultSrcE == 3'b011));
+assign lwStall = (RdE != 5'b0) && ((Rs1D == RdE) || (Rs2D == RdE)) &&
+                 ((ResultSrcE == 3'b001) || (ResultSrcE == 3'b010));
 
-assign divStall = div_busy;
+assign divStall = div_busy & IsDivE;
 
 assign mulStall = IsMulE & ((Rs1D != 5'b0 && Rs1D == RdE) || (Rs2D != 5'b0 && Rs2D == RdE));
 
-assign StallF = lwStall | divStall;
-assign StallD = lwStall | divStall;
+assign StallF = lwStall | divStall | mulStall;
+assign StallD = lwStall | divStall | mulStall;
 
-assign FlushE = lwStall | PCSrcE;
+assign FlushE = lwStall | mulStall | PCSrcE;
 assign FlushD = PCSrcE;
 assign FlushM = 1'b0;
 endmodule

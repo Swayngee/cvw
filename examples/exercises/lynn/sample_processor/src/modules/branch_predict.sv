@@ -1,9 +1,3 @@
-// Branch prediction: BTFNT only (backward taken, forward not taken) + static JAL.
-//
-// PredPCNext  = next PC from fetch (PCF, Instr) — drives IF.
-// PredPCNextD = PredPCNext pipelined with the decode stage (!StallD). Must be the
-//               prediction made when this instruction was in fetch.
-
 module branch_predict (
     input logic clk,
     input logic reset,
@@ -27,7 +21,6 @@ module branch_predict (
     output logic [31:0] PredPCNextD
 );
 
-  // ---------------- fetch path (PCF, Instr) ----------------
   logic [6:0] op;
   logic is_br, is_jal, is_jalr;
   logic [31:0] imm_b, imm_j;
@@ -45,7 +38,6 @@ module branch_predict (
   assign tgt_br = PCF + imm_b;
   assign tgt_jal = PCF + imm_j;
 
-  // ---------------- BTFNT ----------------
   logic pred_taken_btfnt;
   logic [31:0] pred_tgt_btfnt;
   always_comb begin
@@ -71,7 +63,6 @@ module branch_predict (
 
   assign PredPCNext = PredPCNext_comb;
 
-  // Match fetch-time prediction.
   always_ff @(posedge clk) begin
     if (reset | FlushD)
       PredPCNextD <= 32'd0;

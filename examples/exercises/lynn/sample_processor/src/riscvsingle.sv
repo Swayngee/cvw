@@ -67,7 +67,7 @@ logic IsAddW, IsBranchW, IsLoadW, IsStoreW, IsJumpW, IsShiftW, IsMulW, BranchTak
 
 fetch fetch(.clk(clk), .reset(reset), .Instr(Instr), .StallF(StallF), .StallD(StallD), .FlushD(FlushD), .PCSrc(PCSrcE), .IEUAdr(IEUAdrE), .PCD(PCD), .PCF(PC), .InstrD(InstrD));
 
-decode decode(.clk(clk), .reset(reset), .InstrD(InstrD), .PCD(PCD), .StallD(StallD), .FlushE(FlushE), .ResultW(ResultW), .InstrW(InstrW), .RdW(RdW), .RegWriteW(RegWriteW),  .ALUResultSrcE(ALUResultSrcE), .RegWriteE(RegWriteE), .MemWriteE(MemWriteE), .ResultSrcE(ResultSrcE),
+decode decode(.clk(clk), .reset(reset), .InstrD(InstrD), .PCD(PCD), .StallD(StallD), .FlushE(FlushE), .ResultW(ResultW), .RdW(RdW), .RegWriteW(RegWriteW),  .ALUResultSrcE(ALUResultSrcE), .RegWriteE(RegWriteE), .MemWriteE(MemWriteE), .ResultSrcE(ResultSrcE),
         .ALUSrcE(ALUSrcE), .ALUControlE(ALUControlE), .MemEnE(MemEnE), .BranchE(BranchE), .PCE(PCE), .Funct3E(Funct3E), .RdE(RdE), .ImmExtE(ImmExtE), .RD1D(RD1D), .RD2D(RD2D), .RD1E(RD1E), .RD2E(RD2E), .InstrE(InstrE), .IsAddE(IsAddE), .IsBranchE(IsBranchE), .IsLoadE(IsLoadE), .IsStoreE(IsStoreE), .IsJumpE(IsJumpE), .IsShiftE(IsShiftE), .IsMulE(IsMulE), .IsDivE(IsDivE), .Unsigned_divE(Unsigned_divE));
 
 execute execute(.clk(clk), .reset(reset), .ImmExtE(ImmExtE), .Funct3E(Funct3E), .RD1E(RD1E), .RD2E(RD2E), .RdE(RdE), .ResultW(ResultW), .PCE(PCE), .InstrE(InstrE), .IsAddE(IsAddE), .IsBranchE(IsBranchE), .IsLoadE(IsLoadE), .IsStoreE(IsStoreE), .IsJumpE(IsJumpE), .IsShiftE(IsShiftE), .IsMulE(IsMulE), .IsDivE(IsDivE), .Unsigned_divE(Unsigned_divE), .ALUResultSrcE(ALUResultSrcE), .RegWriteE(RegWriteE), .MemWriteE(MemWriteE),

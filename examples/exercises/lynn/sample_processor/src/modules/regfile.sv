@@ -1,7 +1,5 @@
 module regfile(input   logic           clk,
         input   logic           WE3,
-        input logic [31:0] PC,
-        input logic [31:0] Instr,
         input   logic [4:0]     A1, A2, A3,
         input   logic [31:0]    WD3,
         output  logic [31:0]    RD1, RD2

@@ -4,7 +4,6 @@ module decode(input clk, reset,
     input logic StallD,
     input logic FlushE,
     input logic [31:0] ResultW,
-    input logic [31:0] InstrW,
     input logic [4:0] RdW,
     input logic RegWriteW,
     output logic  ALUResultSrcE, RegWriteE, MemWriteE,
@@ -46,7 +45,7 @@ controller cont(.Op(InstrD[6:0]), .Funct3(InstrD[14:12]), .Funct7b5(InstrD[30]),
         .IsLoad(IsLoadD), .IsStore(IsStoreD), .IsJump(IsJumpD), .IsShift(IsShiftD), .IsMul(IsMulD), .IsDiv(IsDivD), .Unsigned_div(Unsigned_divD));
 
 
-regfile rf(.clk(clk), .WE3(RegWriteW), .PC(PCD), .Instr(InstrD), .A1(InstrD[19:15]), .A2(InstrD[24:20]), .A3(RdW), .WD3(ResultW), .RD1(RD1D), .RD2(RD2D));
+regfile rf(.clk(clk), .WE3(RegWriteW), .A1(InstrD[19:15]), .A2(InstrD[24:20]), .A3(RdW), .WD3(ResultW), .RD1(RD1D), .RD2(RD2D));
 extend ext(.Instr(InstrD[31:7]), .ImmSrc(ImmSrcD), .ImmExt(ImmExtD));
 
 

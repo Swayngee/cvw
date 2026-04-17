@@ -1,5 +1,3 @@
-// Branch predictor: default 2-bit PHT + direct-mapped BTB (see branch_predict BPRED_TYPE).
-
 module riscvsingle (input   logic           clk,
         input   logic           reset,
 
@@ -73,7 +71,7 @@ logic IsAddE, IsBranchE, IsLoadE, IsStoreE, IsJumpE, IsShiftE, IsMulE;
 logic IsAddM, IsBranchM, IsLoadM, IsStoreM, IsJumpM, IsShiftM, IsMulM, BranchTakenM;
 logic IsAddW, IsBranchW, IsLoadW, IsStoreW, IsJumpW, IsShiftW, IsMulW, BranchTakenW, MemWriteW;
 
-branch_predict #(.BPRED_TYPE(0), .INDEX_BITS(6)) bp (
+branch_predict bp (
     .clk, .reset,
     .StallD, .FlushD,
     .StallM, .FlushM,

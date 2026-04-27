@@ -32,13 +32,10 @@ always_comb begin
     else ForwardBE = 2'b00;
   end
 
-// Stall ID when EX holds a result not yet available for bypass (load, CSR read, MUL).
-assign lwStall = (RdE != 5'b0)
-    && ((Rs1D == RdE) || (Rs2D == RdE))
-    && ((ResultSrcE == 2'b01) || (ResultSrcE == 2'b10) || (ResultSrcE == 2'b11));
+assign lwStall = (RdE != 5'b0) && ((Rs1D == RdE) || (Rs2D == RdE)) & ((ResultSrcE == 2'b01) || (ResultSrcE == 2'b10) || (ResultSrcE == 2'b11));
 assign StallF = lwStall;
 assign StallD = lwStall;
-    assign FlushE = lwStall | MisPredE;
-    assign FlushD = MisPredE;
+assign FlushE = lwStall | MisPredE;
+assign FlushD = MisPredE;
 
 endmodule

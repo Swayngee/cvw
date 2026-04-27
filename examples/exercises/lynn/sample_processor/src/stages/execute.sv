@@ -39,15 +39,13 @@ module execute(input logic clk, reset,
                 output logic [31:0] PCCorE,
                 output logic MisPredE);
 
-logic [31:0] FSrcAE, FSrcBE_int, ALUResultE, PCLinkE, AltResultE, SrcA, SrcB;
+logic [31:0] FSrcAE, FSrcBE, ALUResultE, PCLinkE, AltResultE, SrcA, SrcB;
 logic [31:0] MStageFwd;
 logic EqE, LTE, LTUE;
 logic BranchTakenE;
 
 
-assign MStageFwd = (ResultSrcM == 2'b01) ? MemFwdData
-                   : (ResultSrcM == 2'b11) ? MulResultM
-                   : ALUOutM;
+assign MStageFwd = (ResultSrcM == 2'b01) ? MemFwdData : ALUOutM;
 
 
 always_comb begin
@@ -61,44 +59,26 @@ end
 
 always_comb begin
     case (ForwardBE)
-        2'b00: FSrcBE_int = RD2E;
-        2'b01: FSrcBE_int = ResultW;
-        2'b10: FSrcBE_int = MStageFwd;
-        default: FSrcBE_int = RD2E;
+        2'b00: FSrcBE = RD2E;
+        2'b01: FSrcBE = ResultW;
+        2'b10: FSrcBE = MStageFwd;
+        default: FSrcBE = RD2E;
     endcase
 end
 
 
 
-cmp cmp(.R1(FSrcAE), .R2(FSrcBE_int), .Eq(EqE), .LT(LTE), .LTU(LTUE));
+cmp cmp(.R1(FSrcAE), .R2(FSrcBE), .Eq(EqE), .LT(LTE), .LTU(LTUE));
 
 adder pcEadd4(.inputA(PCE), .inputB(32'd4), .result(PCLinkE));
 
 mux2 #(32) srcamux(FSrcAE, PCE, ALUSrcE[1], SrcA);
-mux2 #(32) srcbmux(FSrcBE_int, ImmExtE, ALUSrcE[0], SrcB);
+mux2 #(32) srcbmux(FSrcBE, ImmExtE, ALUSrcE[0], SrcB);
 
 alu alu(.SrcA(SrcA), .SrcB(SrcB), .ALUControl(ALUControlE), .ALUResult(ALUResultE), .IEUAdr(IEUAdrE));
 
-logic [31:0] MulResultE;
-logic [63:0] mul_ss, mul_su, mul_uu;
-
-wire signed [63:0] ext_a_s = {{32{SrcA[31]}}, SrcA};
-wire signed [63:0] ext_b_s = {{32{SrcB[31]}}, SrcB};
-wire        [63:0] ext_b_u = {32'b0, SrcB};
-
-assign mul_ss = ext_a_s * ext_b_s;
-assign mul_su = ext_a_s * $signed(ext_b_u);
-assign mul_uu = {32'b0, SrcA} * {32'b0, SrcB};
-
-always_comb begin
-    case (Funct3E[1:0])
-        2'b00: MulResultE = mul_ss[31:0];
-        2'b01: MulResultE = mul_ss[63:32];
-        2'b10: MulResultE = mul_su[63:32];
-        2'b11: MulResultE = mul_uu[63:32];
-        default: MulResultE = 32'b0;
-    endcase
-end
+mul mul(.clk(clk), .reset(reset),.StallM(StallM),.FlushM(FlushM),.SrcA(SrcA),
+    .SrcB(SrcB), .Funct3E(Funct3E),.MulResultM(MulResultM));
 
 logic ConditionMet;
 always_comb begin
@@ -129,13 +109,11 @@ logic [31:0] StoreDataE;
 
 always_comb begin
     case (Funct3E)
-        3'b000:  StoreDataE = {4{FSrcBE_int[7:0]}};
-        3'b001:  StoreDataE = {2{FSrcBE_int[15:0]}};
-        default: StoreDataE = FSrcBE_int;
+        3'b000:  StoreDataE = {4{FSrcBE[7:0]}};
+        3'b001:  StoreDataE = {2{FSrcBE[15:0]}};
+        default: StoreDataE = FSrcBE;
     endcase
 end
-
-
 
 always_ff @(posedge clk) begin
     if (reset | FlushM) begin
@@ -149,7 +127,6 @@ always_ff @(posedge clk) begin
         RegWriteM <= 0;
         MemEnM <= 0;
         InstrM <= 0;
-        MulResultM <= 32'd0;
 
         IsAddM <= 0;
         IsBranchM <= 0;
@@ -175,7 +152,6 @@ always_ff @(posedge clk) begin
         RegWriteM <= RegWriteE;
         MemEnM <= MemEnE;
         InstrM <= InstrE;
-        MulResultM <= MulResultE;
 
         IsAddM <= IsAddE;
         IsBranchM <= IsBranchE;
